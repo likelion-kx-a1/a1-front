@@ -1,31 +1,53 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css");
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Theme */
 
-  /* 폰트 */
-  --font-pretendard: "Pretendard Variable", -apple-system, "Segoe UI", Roboto, sans-serif;
+:root {
+  /* Font */
+  --font-pretendard: "Pretendard Variable", -apple-system, "Segoe UI", Roboto,
+    sans-serif;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Font */
   --font-sans: var(--font-pretendard);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Primary */
+  --color-primary-50: #f2e7fe;
+  --color-primary-100: #dbb2ff;
+  --color-primary-200: #bb86fc;
+  --color-primary-300: #985eff;
+  --color-primary-400: #7f39fb;
+  --color-primary-500: #6200ee;
+  --color-primary-600: #5600e8;
+  --color-primary-700: #3700b3;
+  --color-primary-800: #30009c;
+  --color-primary-900: #23036a;
+
+  /* Secondary */
+  --color-secondary-50: #fefeec;
+  --color-secondary-100: #fdfdcb;
+  --color-secondary-200: #fbfb9e;
+  --color-secondary-300: #f9f871;
+ 
+  /* Gray */
+  --color-gray-50: #fafafa;
+  --color-gray-100: #f4f4f5;
+  --color-gray-200: #e4e4e7;
+  --color-gray-300: #d4d4d8;
+  --color-gray-400: #a1a1aa;
+  --color-gray-500: #71717a;
+  --color-gray-600: #52525b;
+  --color-gray-700: #3f3f46;
+  --color-gray-800: #27272a;
+  --color-gray-900: #18181b;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Base */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
   font-family: var(--font-sans);
 }
 
@@ -38,4 +60,24 @@ body {
   select {
     cursor: pointer;
   }
+}
+
+/* Scrollbar */
+
+.modal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gray-600) transparent;
+}
+
+.modal-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-gray-600);
+  border-radius: 9999px;
 }

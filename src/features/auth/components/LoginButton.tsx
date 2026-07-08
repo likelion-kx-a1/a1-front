@@ -1,13 +1,18 @@
 "use client";
 
+import { useState } from "react";
+import Button from "@/components/ui/Button";
+import AuthModal from "./AuthModal";
+
 export default function LoginButton() {
+  const [open, setOpen] = useState(false);
+
   return (
-    <button
-      onClick={() => {
-      }}
-      className="rounded-lg border border-zinc-600 px-5 py-2 text-sm text-white hover:bg-zinc-900"
-    >
-      로그인
-    </button>
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        로그인
+      </Button>
+      <AuthModal open={open} onClose={() => setOpen(false)} />
+    </>
   );
 }

@@ -5,9 +5,7 @@ import { useEffect } from "react";
 interface ModalProps {
   open: boolean;
   onClose: () => void;
-  /** 접근성 라벨 (모달 제목) */
   label?: string;
-  /** 모달 본문 너비/여백 (기본: max-w-md) */
   className?: string;
   children: React.ReactNode;
 }

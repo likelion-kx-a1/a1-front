@@ -13,12 +13,12 @@ export default function LibraryNav() {
       <button
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
-        className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-zinc-900"
+        className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-gray-900"
       >
-        <span className="size-6 shrink-0 rounded-md bg-zinc-400" aria-hidden />
+        <span className="size-6 shrink-0 rounded-md bg-gray-400" aria-hidden />
         <span className="flex-1">OO님의 라이브러리</span>
         <span
-          className={`text-xs text-zinc-500 transition-transform ${
+          className={`text-xs text-gray-500 transition-transform ${
             open ? "rotate-0" : "-rotate-90"
           }`}
           aria-hidden
@@ -31,7 +31,7 @@ export default function LibraryNav() {
         <ul className="mb-2 flex flex-col">
           {libraryProjects.map((project) => (
             <li key={project}>
-              <button className="w-full rounded-lg px-2 py-2 pl-12 text-left text-zinc-300 hover:bg-zinc-900">
+              <button className="w-full rounded-lg px-2 py-2 pl-12 text-left text-gray-300 hover:bg-gray-900">
                 {project}
               </button>
             </li>

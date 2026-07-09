@@ -7,12 +7,28 @@
   /* Font */
   --font-pretendard: "Pretendard Variable", -apple-system, "Segoe UI", Roboto,
     sans-serif;
+
+  /* 다크 테마 시맨틱 컬러 (디자인 시안 기준) */
+  --background: #111119; /* 앱 배경 */
+  --surface: #1c1f2a; /* 서피스 */
+  --card: #262c3b; /* 카드·모달 */
+  --border: #394257; /* 테두리 */
+  --text-primary: #ffffff; /* 기본 텍스트 */
+  --text-secondary: #bfc7d6; /* 보조 텍스트 */
 }
 
 @theme inline {
   /* Font */
   --font-sans: var(--font-pretendard);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Surface / Text (시맨틱) */
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-foreground: var(--text-primary); /* 기본 텍스트 */
+  --color-muted: var(--text-secondary); /* 보조 텍스트 */
 
   /* Primary */
   --color-primary-50: #f2e7fe;
@@ -26,12 +42,15 @@
   --color-primary-800: #30009c;
   --color-primary-900: #23036a;
 
-  /* Secondary */
-  --color-secondary-50: #fefeec;
-  --color-secondary-100: #fdfdcb;
-  --color-secondary-200: #fbfb9e;
-  --color-secondary-300: #f9f871;
- 
+  /* Secondary (라임) */
+  --color-secondary-50: #fbfee0;
+  --color-secondary-100: #f6fdb5;
+  --color-secondary-200: #f0fc80;
+  --color-secondary-300: #edfb54;
+  --color-secondary-400: #ebfb3d;
+  --color-secondary-500: #eafb2f;
+  --color-secondary-600: #c8f000;
+
   /* Gray */
   --color-gray-50: #fafafa;
   --color-gray-100: #f4f4f5;
@@ -48,6 +67,8 @@
 /* Base */
 
 body {
+  background: var(--background);
+  color: var(--text-primary);
   font-family: var(--font-sans);
 }
 

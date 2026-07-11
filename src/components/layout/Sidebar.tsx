@@ -1,8 +1,15 @@
+import Link from "next/link";
 import LibraryNav from "@/components/layout/LibraryNav";
 
-const createMenus = ["이미지 생성", "비디오 생성", "역 프롬프트"];
+/** 생성 메뉴 (href가 있으면 이동, 없으면 아직 페이지 준비 전) */
+const createMenus: { label: string; href: string | null }[] = [
+  { label: "이미지 생성", href: "/image" },
+  { label: "비디오 생성", href: "/video" },
+  { label: "역 프롬프트", href: null },
+];
 
-/** 임시 아이콘 자리표시 */
+const menuStyle = "flex items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-gray-900";
+
 function IconPlaceholder() {
   return <span className="size-6 shrink-0 rounded-md bg-gray-400" aria-hidden />;
 }
@@ -18,25 +25,28 @@ export default function Sidebar() {
 
       {/* 네비게이션 */}
       <nav className="flex flex-1 flex-col gap-1 px-3">
-        <button className="flex items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-gray-900">
+        <Link href="/" className={menuStyle}>
           <IconPlaceholder />
           <span>홈</span>
-        </button>
+        </Link>
 
         {/* 생성 메뉴 */}
-        {createMenus.map((menu) => (
-          <button
-            key={menu}
-            className="flex items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-gray-900"
-          >
-            <IconPlaceholder />
-            <span>{menu}</span>
-          </button>
-        ))}
+        {createMenus.map((menu) =>
+          menu.href ? (
+            <Link key={menu.label} href={menu.href} className={menuStyle}>
+              <IconPlaceholder />
+              <span>{menu.label}</span>
+            </Link>
+          ) : (
+            <button key={menu.label} className={menuStyle}>
+              <IconPlaceholder />
+              <span>{menu.label}</span>
+            </button>
+          ),
+        )}
 
         <hr className="my-2 border-gray-800" />
 
-        {/* 라이브러리 (접기/펼치기 토글) */}
         <LibraryNav />
       </nav>
 

@@ -1,6 +1,6 @@
-import LibraryNav from "@/features/library/components/LibraryNav";
+import LibraryNav from "@/components/layout/LibraryNav";
 
-const createMenus = ["이미지 생성", "비디오 생성", "스토리보드 생성"];
+const createMenus = ["이미지 생성", "비디오 생성", "역 프롬프트"];
 
 /** 임시 아이콘 자리표시 */
 function IconPlaceholder() {
@@ -23,11 +23,6 @@ export default function Sidebar() {
           <span>홈</span>
         </button>
 
-        {/* 라이브러리 (접기/펼치기 토글) */}
-        <LibraryNav />
-
-        <hr className="my-2 border-gray-800" />
-
         {/* 생성 메뉴 */}
         {createMenus.map((menu) => (
           <button
@@ -38,6 +33,11 @@ export default function Sidebar() {
             <span>{menu}</span>
           </button>
         ))}
+
+        <hr className="my-2 border-gray-800" />
+
+        {/* 라이브러리 (접기/펼치기 토글) */}
+        <LibraryNav />
       </nav>
 
       {/* 계정 */}

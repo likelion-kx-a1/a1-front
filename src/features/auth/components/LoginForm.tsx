@@ -3,12 +3,12 @@
 import { useState } from "react";
 import Button from "@/components/ui/Button";
 import { useLogin } from "@/hooks/useLogin";
-import { saveTokens } from "@/lib/auth";
+import { saveRefreshToken } from "@/lib/auth";
 import { useAuthStore } from "@/stores/authStore";
 
 const socialProviders = ["카카오", "구글", "네이버"];
 
-// 로그인 실패 코드별 안내 메시지 (명세 기준)
+// 로그인 실패 코드별 안내 메시지
 const LOGIN_ERROR_MESSAGES: Record<string, string> = {
   LOGIN_ID_NOT_FOUND: "아이디가 일치하지 않습니다.",
   PASSWORD_NOT_MATCH: "비밀번호가 일치하지 않습니다.",
@@ -30,6 +30,7 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
   const [error, setError] = useState("");
 
   const setUser = useAuthStore((s) => s.setUser);
+  const setAccessToken = useAuthStore((s) => s.setAccessToken);
   const { mutate: loginMutate, isPending: submitting } = useLogin();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -40,11 +41,12 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
       {
         onSuccess: (res) => {
           if (res.success) {
-            saveTokens(res.data.accessToken, res.data.refreshToken);
+            saveRefreshToken(res.data.refreshToken);
+            setAccessToken(res.data.accessToken); // 메모리에만 저장
             setUser(res.data.user); // 전역 로그인 상태 저장
             onSuccess();
           } else {
-            setError(LOGIN_ERROR_MESSAGES[res.code] ?? res.message);
+            setError(LOGIN_ERROR_MESSAGES[res.error.code] ?? res.error.message);
           }
         },
         onError: () => setError("로그인에 실패했습니다. 다시 시도해 주세요."),

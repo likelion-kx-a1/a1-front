@@ -86,7 +86,7 @@ export default function SignupForm({ onSwitchToLogin, onSubmitted }: SignupFormP
           if (res.success) {
             onSubmitted(new Date().toISOString());
           } else {
-            setSubmitError(res.message);
+            setSubmitError(res.error.message);
           }
         },
         onError: () => setSubmitError("회원가입에 실패했습니다. 다시 시도해 주세요."),
@@ -134,9 +134,6 @@ export default function SignupForm({ onSwitchToLogin, onSubmitted }: SignupFormP
             </span>
           )}
         </label>
-
-        {/* 이메일 인증 */}
-        <EmailVerification onVerified={setVerifiedEmail} />
 
         {/* 비밀번호 */}
         <label className="flex flex-col gap-1.5 text-sm font-medium text-gray-200">
@@ -204,6 +201,9 @@ export default function SignupForm({ onSwitchToLogin, onSubmitted }: SignupFormP
             className={inputStyle}
           />
         </label>
+
+        {/* 이메일 인증 */}
+        <EmailVerification onVerified={setVerifiedEmail} />
 
         {/* 약관 동의 */}
         <label className="flex items-center gap-2 text-sm text-gray-300">

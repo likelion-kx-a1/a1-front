@@ -1,11 +1,11 @@
 import Link from "next/link";
 import LibraryNav from "@/components/layout/LibraryNav";
 
-/** 생성 메뉴 (href가 있으면 이동, 없으면 아직 페이지 준비 전) */
+/** 생성 메뉴 */
 const createMenus: { label: string; href: string | null }[] = [
   { label: "이미지 생성", href: "/image" },
   { label: "비디오 생성", href: "/video" },
-  { label: "역 프롬프트", href: null },
+  { label: "역 프롬프트", href: "/reverse-prompt" },
 ];
 
 const menuStyle = "flex items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-gray-900";

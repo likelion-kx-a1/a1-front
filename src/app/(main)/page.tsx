@@ -1,10 +1,9 @@
 import Link from "next/link";
 
-/** href가 있으면 해당 페이지로 이동, 없으면 아직 준비 전 */
 const featureCards: { label: string; href: string | null }[] = [
   { label: "이미지 생성", href: "/image" },
   { label: "비디오 생성", href: "/video" },
-  { label: "역 프롬프트", href: null },
+  { label: "역 프롬프트", href: "/reverse-prompt" },
 ];
 
 const cardStyle =

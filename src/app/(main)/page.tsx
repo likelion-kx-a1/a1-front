@@ -1,40 +1,44 @@
 import Link from "next/link";
 
-const featureCards: { label: string; href: string | null }[] = [
+const featureCards: { label: string; href: string }[] = [
   { label: "이미지 생성", href: "/image" },
   { label: "비디오 생성", href: "/video" },
   { label: "역 프롬프트", href: "/reverse-prompt" },
 ];
 
-const cardStyle =
-  "flex cursor-pointer items-center justify-center rounded-xl bg-gray-600 text-gray-300";
-
 export default function Home() {
   return (
-    <div className="flex flex-col gap-4 pt-2">
-      {/* 랜딩 히어로 (좌: 랜딩 비디오, 우: 스택 2개) */}
-      <div className="grid h-[400px] grid-cols-3 grid-rows-2 gap-4">
-        <div className="col-span-2 row-span-2 flex cursor-pointer items-center justify-center rounded-xl bg-gray-600 text-gray-300">
-          랜딩 비디오
-        </div>
-        <div className="cursor-pointer rounded-xl bg-gray-600" />
-        <div className="cursor-pointer rounded-xl bg-gray-600" />
-      </div>
+    <div className="flex flex-col gap-10 pt-2">
+      {/* 랜딩 히어로 */}
+      <section
+        aria-label="랜딩 비디오"
+        className="flex h-[640px] items-center justify-center overflow-hidden bg-[#222] p-[10px]"
+      >
+        <p className="text-[40px] text-white/10">랜딩 비디오</p>
+      </section>
 
-      {/* 기능 카드 3개 */}
-      <div className="grid h-[180px] grid-cols-3 gap-4">
-        {featureCards.map((card) =>
-          card.href ? (
-            <Link key={card.label} href={card.href} className={cardStyle}>
-              {card.label}
-            </Link>
-          ) : (
-            <div key={card.label} className={cardStyle}>
-              {card.label}
-            </div>
-          ),
-        )}
-      </div>
+      {/* 바로가기 카드 3개 */}
+      <nav aria-label="빠른 이동">
+        <ul className="grid grid-cols-3 gap-6">
+          {featureCards.map((card) => (
+            <li key={card.label}>
+              <Link
+                href={card.href}
+                className="bg-surface relative flex h-[200px] items-end overflow-hidden rounded-2xl p-6"
+              >
+                <span
+                  aria-hidden
+                  className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60"
+                />
+                <span className="relative flex w-full items-center justify-between">
+                  <span className="text-2xl text-white">{card.label}</span>
+                  <span className="size-8 bg-white" aria-hidden />
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </div>
   );
 }

@@ -19,11 +19,11 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col">
         <Providers>
           {/* 앱 셸: 사이드바 + 헤더는 모든 화면 공통 */}
-          <div className="flex flex-1 bg-black text-gray-100">
+          <div className="flex min-h-0 flex-1 bg-black text-gray-100">
             <Sidebar />
-            <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <Header />
-              <main className="flex-1 overflow-y-auto px-8 pb-16">{children}</main>
+              <main className="min-h-0 flex-1 overflow-y-auto px-8 pb-16">{children}</main>
             </div>
           </div>
         </Providers>

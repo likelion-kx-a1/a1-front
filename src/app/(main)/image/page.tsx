@@ -1,67 +1,115 @@
+"use client";
+
 /** 이미지 생성 페이지 */
 
-const OPTION_LABELS = ["기본 이미지 생성", "1:1", "1K"];
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import RatioIcon from "@/components/icons/RatioIcon";
+import OptionDropdown, { type DropdownOption } from "@/components/ui/OptionDropdown";
 
-function OptionBox({ label, chevron = false }: { label: string; chevron?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-800 px-3 py-2 text-sm text-gray-200">
-      <span className="flex items-center gap-2">
-        <span className="size-4 shrink-0 rounded bg-gray-400" aria-hidden />
-        {label}
-      </span>
-      {chevron && (
-        <span className="text-xs text-gray-400" aria-hidden>
-          ▼
-        </span>
-      )}
-    </div>
-  );
-}
+const GENERATION_TYPES = ["이미지 생성", "비디오 생성", "역프롬프트"];
+const TYPE_ROUTES: Record<string, string> = {
+  "이미지 생성": "/image",
+  "비디오 생성": "/video",
+  역프롬프트: "/reverse-prompt",
+};
+
+const RATIO_OPTIONS: DropdownOption[] = ["16:9", "3:2", "1:1", "2:3", "4:5", "9:16"].map(
+  (ratio) => ({ label: ratio, icon: <RatioIcon ratio={ratio} /> }),
+);
+const RESOLUTION_ICON = <span className="size-6 shrink-0 bg-[#6b6b6b]" aria-hidden />;
+const RESOLUTION_OPTIONS: DropdownOption[] = ["1K", "2K", "4K"].map((label) => ({
+  label,
+  icon: RESOLUTION_ICON,
+}));
 
 export default function ImageGenerationPage() {
+  const router = useRouter();
+  const [type, setType] = useState("이미지 생성");
+  const [ratio, setRatio] = useState("1:1");
+  const [resolution, setResolution] = useState("1K");
+
+  // 생성 타입 전환 → 해당 페이지로 이동
+  const handleTypeChange = (next: string) => {
+    setType(next);
+    const href = TYPE_ROUTES[next];
+    if (href) {
+      router.push(href);
+    }
+  };
+
   return (
-    <div className="flex h-full flex-col gap-4 pt-2">
-     
-      <div className="flex flex-col gap-3">
-        <h1 className="text-xl font-bold text-white">이미지 생성</h1>
-        <div className="w-52">
-          <OptionBox label="Untitled" chevron />
-        </div>
-      </div>
+    <div className="flex h-full min-h-0 flex-col items-center justify-end gap-6 py-10">
+      {/* 캔버스 */}
+      <section
+        aria-label="이미지 생성 캔버스"
+        className="-mx-8 flex min-h-[300px] w-full flex-1 items-center justify-center overflow-hidden bg-[#222]"
+      >
+        <p className="text-[40px] font-semibold text-white/10">튜토리얼</p>
+      </section>
 
-      {/* 튜토리얼(캔버스) 영역 */}
-      <div className="flex flex-1 items-center justify-center rounded-xl bg-gray-900/50 text-lg text-gray-600">
-        튜토리얼
-      </div>
+      {/* 설정 패널 */}
+      <div className="flex w-full max-w-[1200px] shrink-0 flex-col items-start gap-4 p-6">
+        {/* 생성 타입 전환 */}
+        <OptionDropdown
+          options={GENERATION_TYPES}
+          value={type}
+          onChange={handleTypeChange}
+          variant="primary"
+          size="lg"
+          direction="up"
+          className="w-[220px]"
+        />
 
-      {/* 프롬프트 카드 */}
-      <div className="rounded-2xl bg-gray-800/60 p-5">
-        {/* 이미지 업로드 */}
-        <div className="flex gap-2">
-          <div className="size-16 rounded-lg bg-gray-700" aria-hidden />
-          <div className="flex size-16 items-center justify-center rounded-lg bg-gray-700 text-2xl text-gray-400">
-            +
+        {/* 프롬프트 입력 */}
+        <div className="flex w-full flex-col gap-6 rounded-2xl bg-[#333] p-6">
+          <div className="flex items-center gap-4">
+            <span className="size-25 rounded-lg bg-[#444]" aria-hidden />
+            <button
+              type="button"
+              aria-label="참고 이미지 추가"
+              className="flex size-25 items-center justify-center rounded-lg bg-[#444] text-2xl text-gray-300"
+            >
+              +
+            </button>
           </div>
+          <p className="max-h-[90px] text-xl leading-[1.5] text-[#999]">
+            이미지를 설명해주세요
+            <br />
+            참고 이미지를 추가해 완성도를 높여보세요
+          </p>
         </div>
-        {/* 설명 */}
-        <div className="mt-4 text-sm text-gray-500">
-          <p>이미지를 설명해주세요</p>
-          <p>참고 이미지를 추가해 완성도를 높여보세요</p>
-        </div>
-      </div>
 
-      {/* 옵션 + 생성 버튼 */}
-      <div className="flex items-center justify-between pb-2">
-        <div className="flex gap-2">
-          {OPTION_LABELS.map((label) => (
-            <OptionBox key={label} label={label} />
-          ))}
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500">000</span>
-          <div className="bg-primary-500 flex size-10 items-center justify-center rounded-lg">
-            <span className="size-5 rounded bg-white/80" aria-hidden />
+        {/* 옵션 + 생성 버튼 */}
+        <div className="flex w-full items-center justify-between">
+          <div className="flex items-center gap-4 rounded-lg bg-[#333] px-4 py-2">
+            <OptionDropdown
+              options={RATIO_OPTIONS}
+              value={ratio}
+              onChange={setRatio}
+              variant="ghost"
+              chevron={false}
+              direction="up"
+              className="w-24"
+            />
+            <OptionDropdown
+              options={RESOLUTION_OPTIONS}
+              value={resolution}
+              onChange={setResolution}
+              variant="ghost"
+              chevron={false}
+              direction="up"
+              className="w-24"
+            />
           </div>
+
+          <button
+            type="button"
+            aria-label="이미지 생성"
+            className="bg-primary-500 flex h-12 w-[120px] items-center justify-center rounded-lg"
+          >
+            <span className="size-10 bg-[#6b6b6b]" aria-hidden />
+          </button>
         </div>
       </div>
     </div>

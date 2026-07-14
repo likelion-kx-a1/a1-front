@@ -1,38 +1,58 @@
-/** 역 프롬프트 페이지*/
+"use client";
 
-function OptionBox({ label, chevron = false }: { label: string; chevron?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-800 px-3 py-2 text-sm text-gray-200">
-      <span className="flex items-center gap-2">
-        <span className="size-4 shrink-0 rounded bg-gray-400" aria-hidden />
-        {label}
-      </span>
-      {chevron && (
-        <span className="text-xs text-gray-400" aria-hidden>
-          ▼
-        </span>
-      )}
-    </div>
-  );
-}
+/** 역프롬프트 페이지 */
+
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import OptionDropdown from "@/components/ui/OptionDropdown";
+
+const GENERATION_TYPES = ["이미지 생성", "비디오 생성", "역프롬프트"];
+const TYPE_ROUTES: Record<string, string> = {
+  "이미지 생성": "/image",
+  "비디오 생성": "/video",
+  역프롬프트: "/reverse-prompt",
+};
 
 export default function ReversePromptPage() {
+  const router = useRouter();
+  const [type, setType] = useState("역프롬프트");
+
+  // 생성 타입 전환 → 해당 페이지로 이동
+  const handleTypeChange = (next: string) => {
+    setType(next);
+    const href = TYPE_ROUTES[next];
+    if (href) {
+      router.push(href);
+    }
+  };
+
   return (
-    <div className="flex h-full flex-col gap-4 pt-2">
-      {/* 타이틀 + 프로젝트 선택*/}
-      <div className="flex flex-col gap-3">
-        <h1 className="text-xl font-bold text-white">역 프롬프트</h1>
-        <div className="w-52">
-          <OptionBox label="Untitled" chevron />
-        </div>
-      </div>
+    <div className="flex h-full min-h-0 flex-col items-center justify-end gap-6 py-10">
+      <div aria-hidden className="min-h-[300px] w-full flex-1" />
 
-      {/* 캔버스 영역 */}
-      <div className="flex-1" />
+      <div className="flex h-[430px] w-full max-w-[1200px] shrink-0 flex-col items-start gap-4 p-6">
+        {/* 생성 타입 전환 */}
+        <OptionDropdown
+          options={GENERATION_TYPES}
+          value={type}
+          onChange={handleTypeChange}
+          variant="primary"
+          size="lg"
+          direction="up"
+          className="w-[220px]"
+        />
 
-      <div className="rounded-2xl bg-gray-800/60 p-4">
-        <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-gray-600 text-sm text-gray-500">
-          이미지를 드래그 하거나 추가하세요
+        {/* 이미지 업로드 */}
+        <div className="flex w-full flex-1 flex-col items-start rounded-2xl bg-[#333] p-6">
+          <div className="flex w-full flex-1 flex-col items-start rounded-lg border-2 border-dashed border-[#444] bg-[#222] p-4">
+            <label
+              htmlFor="reverse-prompt-upload"
+              className="flex w-full flex-1 cursor-pointer items-center justify-center text-center text-xl leading-[1.5] text-[#999]"
+            >
+              이미지를 드래그 하거나 추가하세요
+              <input id="reverse-prompt-upload" type="file" accept="image/*" className="sr-only" />
+            </label>
+          </div>
         </div>
       </div>
     </div>

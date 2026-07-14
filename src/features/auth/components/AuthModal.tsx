@@ -41,33 +41,20 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
       onClose={handleClose}
       label={MODAL_LABEL[mode]}
       className={
-        mode === "pending"
-          ? "modal-scroll max-h-[90vh] max-w-lg overflow-y-auto"
-          : "modal-scroll max-h-[90vh] max-w-4xl overflow-y-auto"
+        mode === "signup"
+          ? "modal-scroll max-h-[90vh] max-w-[1200px] overflow-y-auto"
+          : "modal-scroll max-h-[90vh] max-w-[1200px] overflow-hidden"
       }
     >
       {mode === "pending" ? (
         <SignupPendingStatus appliedAt={appliedAt} />
+      ) : mode === "login" ? (
+        <LoginForm onSwitchToSignup={() => setMode("signup")} onSuccess={handleClose} />
       ) : (
-        <div className="grid gap-23 p-6 md:grid-cols-2">
-          {/* 왼쪽 비주얼 패널 (모바일에선 숨김) */}
-          <div className="bg-primary-500 hidden min-h-[440px] rounded-2xl md:block" />
-
-          {/* 오른쪽 폼 (로그인 / 회원가입 전환) */}
-          <div className="flex flex-col justify-center py-10 md:pr-15">
-            {mode === "login" ? (
-              <LoginForm
-                onSwitchToSignup={() => setMode("signup")}
-                onSuccess={handleClose}
-              />
-            ) : (
-              <SignupForm
-                onSwitchToLogin={() => setMode("login")}
-                onSubmitted={handleSignupSubmitted}
-              />
-            )}
-          </div>
-        </div>
+        <SignupForm
+          onSwitchToLogin={() => setMode("login")}
+          onSubmitted={handleSignupSubmitted}
+        />
       )}
     </Modal>
   );

@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useId } from "react";
+import Link from "next/link";
 
 interface SignupPendingStatusProps {
   /** 가입 신청 일시 */
@@ -8,179 +9,79 @@ interface SignupPendingStatusProps {
 function formatAppliedAt(iso: string) {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return {
+    date: `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+  };
 }
 
-export default function SignupPendingStatus({
-  appliedAt,
-}: SignupPendingStatusProps) {
+export default function SignupPendingStatus({ appliedAt }: SignupPendingStatusProps) {
+  const headingId = useId();
+  const { date, time } = formatAppliedAt(appliedAt);
+
   return (
-    <div className="flex flex-col items-center px-6 py-10 text-center">
-      {/* 아이콘 */}
-      <div className="relative mb-6 flex size-40 shrink-0 items-center justify-center">
-        {/* 장식 점 */}
-        <span
-          className="bg-primary-300 absolute top-2 left-6 size-2 rounded-full"
-          aria-hidden
-        />
-        <span
-          className="absolute top-14 -left-2 size-1.5 rounded-full bg-emerald-400"
-          aria-hidden
-        />
-        <span
-          className="absolute bottom-4 left-2 size-2 rounded-full bg-amber-300"
-          aria-hidden
-        />
-        <span
-          className="bg-primary-300 absolute top-4 right-2 size-1.5 rounded-full"
-          aria-hidden
-        />
-        <span
-          className="absolute top-16 right-0 text-lg text-gray-300"
-          aria-hidden
-        >
-          ✦
-        </span>
-
-        {/* 원형 배경 */}
-        <div className="bg-primary-50 absolute size-32 rounded-full" />
-
-        {/* 클립보드 아이콘 */}
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          className="text-primary-300 relative size-16"
-        >
-          <rect x="5" y="3" width="14" height="18" rx="2" />
-          <rect
-            x="9"
-            y="1.5"
-            width="6"
-            height="3"
-            rx="1"
-            fill="currentColor"
-            stroke="none"
-          />
-          <circle cx="12" cy="10" r="2" />
-          <path d="M9 15h6M9 17.5h4" strokeLinecap="round" />
-        </svg>
-
-        {/* 시계 배지 */}
-        <span className="bg-primary-500 absolute right-1 bottom-1 flex size-9 items-center justify-center rounded-full text-white shadow-md">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            className="size-5"
-          >
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 7v5l3 3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </span>
+    <section
+      aria-labelledby={headingId}
+      className="grid overflow-hidden rounded-2xl md:grid-cols-2"
+    >
+      {/* 왼쪽 비주얼 패널 (모바일에선 숨김) */}
+      <div aria-hidden className="bg-card relative hidden min-h-[480px] overflow-hidden md:block">
+        <div className="absolute top-[41.667%] left-[-33.333%] h-[57.971%] w-[166.667%]">
+          <div className="absolute inset-[-50%_-24%]">
+            <img src="/images/auth/gradient-purple.svg" alt="" className="block size-full max-w-none" />
+          </div>
+        </div>
+        <div className="absolute top-[-7.269%] left-[17%] h-[24.155%] w-[66.667%] rotate-180">
+          <div className="absolute inset-[-120%_-60%]">
+            <img src="/images/auth/gradient-yellow.svg" alt="" className="block size-full max-w-none" />
+          </div>
+        </div>
       </div>
 
-      <h2 className="text-2xl font-bold text-gray-900">
-        가입 승인 대기 중입니다
-      </h2>
-      <p className="mt-3 text-sm leading-6 text-gray-500">
-        입력하신 정보가 정상적으로 접수되었습니다.
-        <br />
-        관리자의 승인 후 서비스 이용이 가능합니다.
-      </p>
+      {/* 오른쪽 콘텐츠 */}
+      <div className="bg-surface flex flex-col justify-center gap-10 px-[100px] py-[158px]">
+        <div className="flex flex-col gap-4">
+          <h2 id={headingId} className="text-[32px] leading-[1.2] font-semibold text-white">
+            환영합니다!
+            <br />
+            이제 한 단계 남았습니다
+          </h2>
+          <p className="text-base leading-[1.5] tracking-[-0.32px] text-[#999]">
+            관리자의 권한 승인을 대기해 주세요
+            <br />
+            권한 승인 후 서비스를 이용할 수 있습니다
+          </p>
+        </div>
 
-      {/* 상태 카드 */}
-      <div className="mt-8 w-full divide-y divide-gray-200 rounded-2xl border border-gray-200 bg-white text-left">
-        <StatusRow icon={<ClockIcon />} label="현재 상태">
-          <span className="text-primary-500 font-medium">승인 대기 중</span>
-        </StatusRow>
-        <StatusRow icon={<UserIcon />} label="신청 일시">
-          <span className="text-gray-900">{formatAppliedAt(appliedAt)}</span>
-        </StatusRow>
-        <StatusRow icon={<MailIcon />} label="안내">
-          <span className="text-gray-900">
-            승인 완료 시 등록하신 이메일로 안내드리겠습니다.
-          </span>
-        </StatusRow>
+        <div className="border-border flex w-full flex-col gap-10 rounded-lg border-2 p-6 backdrop-blur-[10px]">
+          <div className="flex w-full flex-col gap-10">
+            <div className="flex flex-col gap-4">
+              <p className="text-base text-[#999]">권한 승인 여부</p>
+              <p className="text-xl text-white">권한 승인 대기 중</p>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <p className="text-base text-[#999]">요청 시간</p>
+              <div className="flex gap-4 text-xl text-white">
+                <time dateTime={appliedAt}>{date}</time>
+                <span aria-hidden>{time}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4 text-center text-base leading-[1.5]">
+            <div className="flex flex-col gap-2">
+              <p className="text-[#999]">문의사항이 있으신가요?</p>
+              <button type="button" className="text-primary-500 underline hover:text-primary-400">
+                고객센터 문의하기
+              </button>
+            </div>
+            <Link href="/" className="text-[#999] underline hover:text-white">
+              홈으로 돌아가기
+            </Link>
+          </div>
+        </div>
       </div>
-
-      {/* 고객센터 */}
-      <p className="mt-8 text-sm text-gray-400">
-        궁금한 점이 있으시면 고객센터로 문의해주세요.
-      </p>
-      <a
-        href="#"
-        className="text-primary-500 mt-1 text-sm font-medium hover:underline"
-      >
-        고객센터 바로가기 &gt;
-      </a>
-    </div>
-  );
-}
-
-interface StatusRowProps {
-  icon: ReactNode;
-  label: string;
-  children: ReactNode;
-}
-
-function StatusRow({ icon, label, children }: StatusRowProps) {
-  return (
-    <div className="flex items-start gap-3 px-5 py-4">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500">
-        {icon}
-      </span>
-      <span className="flex flex-col gap-0.5">
-        <span className="text-sm text-gray-500">{label}</span>
-        <span className="text-sm">{children}</span>
-      </span>
-    </div>
-  );
-}
-
-function ClockIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      className="size-5"
-    >
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function UserIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      className="size-5"
-    >
-      <circle cx="12" cy="8" r="3.5" />
-      <path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function MailIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      className="size-5"
-    >
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="M3 7l9 6 9-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    </section>
   );
 }

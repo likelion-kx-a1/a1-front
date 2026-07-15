@@ -4,8 +4,10 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import CopyIcon from "@/components/icons/CopyIcon";
 import GenerateIcon from "@/components/icons/GenerateIcon";
 import RatioIcon from "@/components/icons/RatioIcon";
+import GeneratingSpinner from "@/components/ui/GeneratingSpinner";
 import AuthModal from "@/features/auth/components/AuthModal";
 import OptionDropdown, { type DropdownOption } from "@/components/ui/OptionDropdown";
 import { GENERATION_TYPE_OPTIONS, GENERATION_TYPE_ROUTES } from "@/lib/generationTypes";
@@ -32,6 +34,10 @@ export default function ImageGenerationPage() {
   const [referenceImages, setReferenceImages] = useState<File[]>([]);
   const [prompt, setPrompt] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [submittedPrompt, setSubmittedPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // 선택한 참고 이미지들의 미리보기 URL
   const referencePreviews = useMemo(
@@ -80,15 +86,59 @@ export default function ImageGenerationPage() {
     }
   };
 
+  // 이미지 생성 요청
+  const handleGenerate = () => {
+    requireAuth(() => {
+      if (!prompt.trim()) {
+        return;
+      }
+      setSubmittedPrompt(prompt);
+      setIsGenerating(true);
+      setPrompt("");
+      window.setTimeout(() => setIsGenerating(false), 4000);
+    });
+  };
+
+  const handleCopyPrompt = async () => {
+    await navigator.clipboard.writeText(submittedPrompt);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col items-center justify-end gap-6 py-10">
-      {/* 캔버스 */}
-      <section
-        aria-label="이미지 생성 캔버스"
-        className="-mx-8 flex min-h-[300px] w-full flex-1 items-center justify-center overflow-hidden bg-[#222]"
-      >
-        <p className="text-[40px] font-semibold text-white/10">튜토리얼</p>
-      </section>
+      {/* 캔버스 / 생성 결과 */}
+      {submittedPrompt ? (
+        <div
+          aria-live="polite"
+          className="-mx-8 flex w-full flex-1 flex-col items-end justify-end gap-4 overflow-y-auto px-10"
+        >
+          {/* 생성 중인 이미지 */}
+          <GeneratingSpinner isGenerating={isGenerating} label="이미지" />
+
+          {/* 보낸 프롬프트 */}
+          <div className="flex w-full max-w-[1000px] flex-col items-end gap-6 rounded-lg bg-[#222] p-6">
+            <p className="w-full text-xl leading-[1.5] tracking-[-0.4px] text-white">
+              {submittedPrompt}
+            </p>
+            <button
+              type="button"
+              aria-label={copied ? "복사됨" : "프롬프트 복사"}
+              onClick={handleCopyPrompt}
+              className="flex size-12 items-center justify-center rounded-lg bg-[#333] text-white"
+            >
+              <CopyIcon className="size-6" aria-hidden />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <section
+          aria-label="이미지 생성 캔버스"
+          className="-mx-8 flex min-h-[300px] w-full flex-1 items-center justify-center overflow-hidden bg-[#222]"
+        >
+          <p className="text-[40px] font-semibold text-white/10">튜토리얼</p>
+        </section>
+      )}
 
       {/* 설정 패널 */}
       <div className="flex w-full max-w-[1200px] shrink-0 flex-col items-start gap-4 p-6">
@@ -173,7 +223,9 @@ export default function ImageGenerationPage() {
           <button
             type="button"
             aria-label="이미지 생성"
-            className="bg-primary-500 flex h-12 w-[120px] items-center justify-center rounded-lg"
+            onClick={handleGenerate}
+            disabled={!prompt.trim()}
+            className="bg-primary-500 flex h-12 w-[120px] items-center justify-center rounded-lg disabled:cursor-not-allowed disabled:opacity-50"
           >
             <GenerateIcon className="size-8 text-white" aria-hidden />
           </button>

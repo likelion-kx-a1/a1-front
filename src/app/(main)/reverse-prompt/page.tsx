@@ -5,13 +5,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import OptionDropdown from "@/components/ui/OptionDropdown";
-
-const GENERATION_TYPES = ["이미지 생성", "비디오 생성", "역프롬프트"];
-const TYPE_ROUTES: Record<string, string> = {
-  "이미지 생성": "/image",
-  "비디오 생성": "/video",
-  역프롬프트: "/reverse-prompt",
-};
+import { GENERATION_TYPE_OPTIONS, GENERATION_TYPE_ROUTES } from "@/lib/generationTypes";
 
 export default function ReversePromptPage() {
   const router = useRouter();
@@ -20,7 +14,7 @@ export default function ReversePromptPage() {
   // 생성 타입 전환 → 해당 페이지로 이동
   const handleTypeChange = (next: string) => {
     setType(next);
-    const href = TYPE_ROUTES[next];
+    const href = GENERATION_TYPE_ROUTES[next];
     if (href) {
       router.push(href);
     }
@@ -33,7 +27,7 @@ export default function ReversePromptPage() {
       <div className="flex h-[430px] w-full max-w-[1200px] shrink-0 flex-col items-start gap-4 p-6">
         {/* 생성 타입 전환 */}
         <OptionDropdown
-          options={GENERATION_TYPES}
+          options={GENERATION_TYPE_OPTIONS}
           value={type}
           onChange={handleTypeChange}
           variant="primary"

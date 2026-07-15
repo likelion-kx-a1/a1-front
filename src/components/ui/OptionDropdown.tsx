@@ -76,6 +76,7 @@ export default function OptionDropdown({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const normalized = normalize(options);
+  const selected = normalized.find((option) => option.label === value);
 
   useEffect(() => {
     if (!open) {
@@ -106,7 +107,7 @@ export default function OptionDropdown({
         )}
       >
         <span className={twMerge("flex items-center", TRIGGER_INNER[size])}>
-          <span className={twMerge("shrink-0", ICON_SIZE[size])} aria-hidden />
+          {selected?.icon ?? <span className={twMerge("shrink-0", ICON_SIZE[size])} aria-hidden />}
           {value}
         </span>
         {chevron && (

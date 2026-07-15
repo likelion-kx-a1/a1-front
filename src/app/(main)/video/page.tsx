@@ -4,15 +4,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import GenerateIcon from "@/components/icons/GenerateIcon";
 import RatioIcon from "@/components/icons/RatioIcon";
 import OptionDropdown, { type DropdownOption } from "@/components/ui/OptionDropdown";
-
-const GENERATION_TYPES = ["이미지 생성", "비디오 생성", "역프롬프트"];
-const TYPE_ROUTES: Record<string, string> = {
-  "이미지 생성": "/image",
-  "비디오 생성": "/video",
-  역프롬프트: "/reverse-prompt",
-};
+import { GENERATION_TYPE_OPTIONS, GENERATION_TYPE_ROUTES } from "@/lib/generationTypes";
 
 const RATIO_OPTIONS: DropdownOption[] = ["16:9", "3:2", "1:1", "2:3", "4:5", "9:16"].map(
   (ratio) => ({ label: ratio, icon: <RatioIcon ratio={ratio} /> }),
@@ -32,7 +27,7 @@ export default function VideoGenerationPage() {
   // 생성 타입 전환 → 해당 페이지로 이동
   const handleTypeChange = (next: string) => {
     setType(next);
-    const href = TYPE_ROUTES[next];
+    const href = GENERATION_TYPE_ROUTES[next];
     if (href) {
       router.push(href);
     }
@@ -52,7 +47,7 @@ export default function VideoGenerationPage() {
       <div className="flex w-full max-w-[1200px] shrink-0 flex-col items-start gap-4 p-6">
         {/* 생성 타입 전환 */}
         <OptionDropdown
-          options={GENERATION_TYPES}
+          options={GENERATION_TYPE_OPTIONS}
           value={type}
           onChange={handleTypeChange}
           variant="primary"
@@ -148,7 +143,7 @@ export default function VideoGenerationPage() {
             aria-label="비디오 생성"
             className="bg-primary-500 flex h-12 w-[120px] items-center justify-center rounded-lg"
           >
-            <span className="size-10 bg-[#6b6b6b]" aria-hidden />
+            <GenerateIcon className="size-8 text-white" aria-hidden />
           </button>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import LoginForm from "./LoginForm";
+import ResetPasswordForm from "./ResetPasswordForm";
 import SignupForm from "./SignupForm";
 import SignupPendingStatus from "./SignupPendingStatus";
 
@@ -11,12 +12,13 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
-type AuthMode = "login" | "signup" | "pending";
+type AuthMode = "login" | "signup" | "pending" | "resetPassword";
 
 const MODAL_LABEL: Record<AuthMode, string> = {
   login: "로그인",
   signup: "회원가입",
   pending: "가입 승인 대기",
+  resetPassword: "비밀번호 재설정",
 };
 
 export default function AuthModal({ open, onClose }: AuthModalProps) {
@@ -49,7 +51,13 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
       {mode === "pending" ? (
         <SignupPendingStatus appliedAt={appliedAt} />
       ) : mode === "login" ? (
-        <LoginForm onSwitchToSignup={() => setMode("signup")} onSuccess={handleClose} />
+        <LoginForm
+          onSwitchToSignup={() => setMode("signup")}
+          onSwitchToResetPassword={() => setMode("resetPassword")}
+          onSuccess={handleClose}
+        />
+      ) : mode === "resetPassword" ? (
+        <ResetPasswordForm onSwitchToLogin={() => setMode("login")} onClose={handleClose} />
       ) : (
         <SignupForm
           onSwitchToLogin={() => setMode("login")}

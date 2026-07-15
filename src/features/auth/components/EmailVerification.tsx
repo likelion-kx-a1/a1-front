@@ -43,7 +43,7 @@ export default function EmailVerification({ onVerified }: EmailVerificationProps
     setError("");
     try {
       // 발송 응답의 만료 시각으로 남은 시간 계산
-      const expiredAt = await requestEmailCode(email);
+      const expiredAt = await requestEmailCode({ email, purpose: "SIGNUP" });
       const remaining = Math.max(0, Math.ceil((new Date(expiredAt).getTime() - Date.now()) / 1000));
       setSent(true);
       setVerified(false);

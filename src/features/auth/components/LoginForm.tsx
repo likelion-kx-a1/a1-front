@@ -18,11 +18,17 @@ const LOGIN_ERROR_MESSAGES: Record<string, string> = {
 interface LoginFormProps {
   /** 회원가입 화면으로 전환 */
   onSwitchToSignup: () => void;
+  /** 비밀번호 재설정 화면으로 전환 */
+  onSwitchToResetPassword: () => void;
   /** 로그인 성공 시 호출*/
   onSuccess: () => void;
 }
 
-export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProps) {
+export default function LoginForm({
+  onSwitchToSignup,
+  onSwitchToResetPassword,
+  onSuccess,
+}: LoginFormProps) {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -146,7 +152,11 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
           <button type="button" onClick={onSwitchToSignup} className="underline hover:text-white">
             회원가입
           </button>
-          <button type="button" className="underline hover:text-white">
+          <button
+            type="button"
+            onClick={onSwitchToResetPassword}
+            className="underline hover:text-white"
+          >
             아이디/비밀번호를 잊었어요
           </button>
         </div>

@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
+import CaretIcon from "@/components/icons/CaretIcon";
 
 export interface DropdownOption {
   label: string;
@@ -11,7 +12,6 @@ export interface DropdownOption {
 }
 
 interface OptionDropdownProps {
-  /** 문자열 배열 또는 아이콘을 지정할 수 있는 옵션 객체 배열 */
   options: string[] | DropdownOption[];
   value: string;
   onChange: (value: string) => void;
@@ -45,6 +45,11 @@ const TRIGGER_INNER = {
 const ICON_SIZE = {
   sm: "size-6 bg-gray-400",
   lg: "size-8 bg-[#6b6b6b]",
+};
+
+const CHEVRON_SIZE = {
+  sm: "size-4",
+  lg: "size-6",
 };
 
 const LIST_VARIANT = {
@@ -91,7 +96,7 @@ export default function OptionDropdown({
     return () => window.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
-  const chevronGlyph = direction === "up" ? "▲" : "▼";
+  const chevronPointsDown = direction === "down" ? !open : open;
 
   return (
     <div className={twMerge("relative inline-block", className)} ref={ref}>
@@ -111,12 +116,14 @@ export default function OptionDropdown({
           {value}
         </span>
         {chevron && (
-          <span
+          <CaretIcon
             aria-hidden
-            className={twMerge("shrink-0 text-xs transition-transform", open && "rotate-180")}
-          >
-            {chevronGlyph}
-          </span>
+            className={twMerge(
+              "shrink-0 transition-transform",
+              CHEVRON_SIZE[size],
+              chevronPointsDown && "rotate-180",
+            )}
+          />
         )}
       </button>
 

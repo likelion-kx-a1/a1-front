@@ -7,8 +7,9 @@ import CaretIcon from "@/components/icons/CaretIcon";
 
 export interface DropdownOption {
   label: string;
-  /** 목록에 보일 커스텀 아이콘 */
   icon?: ReactNode;
+  /** 목록에서 라벨 옆 설명 텍스트 (예: "1:1" 옆의 "정사각형") */
+  description?: string;
 }
 
 interface OptionDropdownProps {
@@ -23,6 +24,8 @@ interface OptionDropdownProps {
   size?: "sm" | "lg";
   /** 트리거에 펼침 화살표를 보일지 (기본 true) */
   chevron?: boolean;
+  /** 펼친 목록에서도 아이콘을 보일지 (기본 true) */
+  listIcon?: boolean;
   className?: string;
 }
 
@@ -76,6 +79,7 @@ export default function OptionDropdown({
   variant = "gray",
   size = "sm",
   chevron = true,
+  listIcon = true,
   className = "",
 }: OptionDropdownProps) {
   const [open, setOpen] = useState(false);
@@ -131,7 +135,7 @@ export default function OptionDropdown({
         <ul
           role="listbox"
           className={twMerge(
-            "modal-scroll absolute left-0 z-10 max-h-64 w-full overflow-y-auto rounded-lg shadow-lg",
+            "modal-scroll absolute left-0 z-10 max-h-64 w-max min-w-full overflow-y-auto rounded-lg shadow-lg",
             direction === "up" ? "bottom-full mb-2" : "top-full mt-2",
             LIST_VARIANT[variant],
           )}
@@ -147,7 +151,7 @@ export default function OptionDropdown({
                   setOpen(false);
                 }}
                 className={twMerge(
-                  "flex w-full items-center text-left",
+                  "flex w-full items-center whitespace-nowrap text-left",
                   ITEM_SIZE[size],
                   variant === "primary"
                     ? "text-white hover:bg-white/10"
@@ -157,8 +161,16 @@ export default function OptionDropdown({
                       ),
                 )}
               >
-                {option.icon ?? <span className={twMerge("shrink-0", ICON_SIZE[size])} aria-hidden />}
-                {option.label}
+                <span className="flex items-center gap-2">
+                  {listIcon &&
+                    (option.icon ?? (
+                      <span className={twMerge("shrink-0", ICON_SIZE[size])} aria-hidden />
+                    ))}
+                  {option.label}
+                </span>
+                {option.description && (
+                  <span className="ml-auto pl-4 text-sm text-gray-400">{option.description}</span>
+                )}
               </button>
             </li>
           ))}

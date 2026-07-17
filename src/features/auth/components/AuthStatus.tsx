@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import BellIcon from "@/components/icons/BellIcon";
 import { logout } from "@/lib/auth";
 import { refreshAccessToken } from "@/lib/http";
 import { useAuthStore } from "@/stores/authStore";
@@ -46,13 +47,13 @@ export default function AuthStatus() {
   // 로그인 → 알림 + 프로필 메뉴(클릭 시 로그아웃 표시)
   return (
     <div className="flex items-center gap-3">
-      {/* 알림 아이콘 자리 */}
+      {/* 알림 */}
       <button
         type="button"
         className="flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-gray-900"
         aria-label="알림"
       >
-        <span className="size-5 rounded-md bg-gray-400" aria-hidden />
+        <BellIcon className="size-6 text-white" aria-hidden />
       </button>
 
       {/* 프로필 메뉴 */}

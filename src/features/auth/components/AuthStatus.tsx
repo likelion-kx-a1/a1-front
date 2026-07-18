@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import BellIcon from "@/components/icons/BellIcon";
+import NotificationBell from "@/features/notifications/components/NotificationBell";
 import { logout } from "@/lib/auth";
 import { refreshAccessToken } from "@/lib/http";
 import { useAuthStore } from "@/stores/authStore";
@@ -47,14 +47,8 @@ export default function AuthStatus() {
   // 로그인 → 알림 + 프로필 메뉴(클릭 시 로그아웃 표시)
   return (
     <div className="flex items-center gap-3">
-      {/* 알림 */}
-      <button
-        type="button"
-        className="flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-gray-900"
-        aria-label="알림"
-      >
-        <BellIcon className="size-6 text-white" aria-hidden />
-      </button>
+      {/* 알림 (로그인 상태에서만 렌더되는 이 컴포넌트 안에 있으므로 비로그인 사용자에겐 노출되지 않음) */}
+      <NotificationBell />
 
       {/* 프로필 메뉴 */}
       <div className="relative" ref={menuRef}>

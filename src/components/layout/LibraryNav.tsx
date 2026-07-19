@@ -68,7 +68,7 @@ export default function LibraryNav() {
       {
         onSuccess: (res) => {
           if (res.success) {
-            router.push("/image");
+            router.push(`/project/${res.data.projectId}/image`);
           } else {
             setActionError(res.error.message);
           }

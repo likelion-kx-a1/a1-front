@@ -1,13 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import { createChat } from "@/lib/chats";
-import {
-  extractImageUrl,
-  fileToBase64,
-  getFalJobStatus,
-  regeneratePrompt,
-  submitFalJob,
-} from "@/lib/generation";
+import { createChat, getChatDetail, sendChatMessage } from "@/lib/chats";
 import { useAuthStore } from "@/stores/authStore";
 
 const POLL_INTERVAL_MS = 3000;
@@ -17,7 +10,8 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 interface GenerateImageParams {
   prompt: string;
-  referenceImage?: File;
+  /** 참고 이미지 — multipart files로 함께 전송 */
+  referenceImages?: File[];
 }
 
 interface GenerateImageResult {
@@ -25,8 +19,13 @@ interface GenerateImageResult {
   prompt: string;
 }
 
+/**
+ * 이미지 생성 훅.
+ * 채팅 메시지 API(POST /api/chats/{chatId}/messages, assetType=IMAGE)로 요청하고
+ * 채팅 상세 조회로 생성 완료를 폴링.
+ */
 export function useImageGeneration(projectId?: number | null) {
-  const userId = useAuthStore((s) => s.user?.id);
+  const user = useAuthStore((s) => s.user);
   // 이 훅이 마운트된 동안(같은 세션)에는 최초 생성 시 만든 채팅을 재사용
   const chatIdRef = useRef<number | null>(null);
 
@@ -35,8 +34,8 @@ export function useImageGeneration(projectId?: number | null) {
   }, [projectId]);
 
   return useMutation({
-    mutationFn: async ({ prompt, referenceImage }: GenerateImageParams) => {
-      if (!userId) {
+    mutationFn: async ({ prompt, referenceImages }: GenerateImageParams) => {
+      if (!user) {
         throw new Error("로그인이 필요합니다.");
       }
 
@@ -49,56 +48,51 @@ export function useImageGeneration(projectId?: number | null) {
       }
       const chatId = chatIdRef.current;
 
-      let finalPrompt = prompt;
+      // 요청 전에 이미 있던 자산 ID — 새로 생긴 IMAGE만 결과로 사용
+      const beforeRes = await getChatDetail(chatId);
+      const knownAssetIds = new Set(
+        beforeRes.success
+          ? beforeRes.data.generatedAssets.map((asset) => asset.assetId)
+          : [],
+      );
 
-      if (referenceImage) {
-        const imageBase64 = await fileToBase64(referenceImage);
-        const promptRes = await regeneratePrompt({
-          userId,
-          chatId,
-          imageBase64,
-          mimeType: referenceImage.type,
-          instruction: prompt,
-        });
-        if (!promptRes.success) {
-          throw new Error(promptRes.error.message);
-        }
-        const refined = promptRes.data.responsePayload?.text;
-        if (typeof refined === "string" && refined.trim()) {
-          finalPrompt = refined;
-        }
-      }
-
-      const submitRes = await submitFalJob({
-        userId,
-        chatId,
-        jobType: "IMAGE_GENERATION",
-        modelCode: "openai/gpt-image-2",
-        input: { prompt: finalPrompt },
+      const messageRes = await sendChatMessage(chatId, {
+        contentText: prompt,
+        assetType: "IMAGE",
+        files: referenceImages?.length ? referenceImages : undefined,
       });
-      if (!submitRes.success) {
-        throw new Error(submitRes.error.message);
+      if (!messageRes.success) {
+        throw new Error(messageRes.error.message);
       }
-      const jobId = submitRes.data.id;
+
+      let sawGenerating = false;
 
       for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
         await sleep(POLL_INTERVAL_MS);
-        const statusRes = await getFalJobStatus(jobId);
-        if (!statusRes.success) {
-          throw new Error(statusRes.error.message);
+        const detailRes = await getChatDetail(chatId);
+        if (!detailRes.success) {
+          throw new Error(detailRes.error.message);
         }
-        const job = statusRes.data;
 
-        if (job.status === "COMPLETED") {
-          const imageUrl = extractImageUrl(job.responsePayload);
-          if (!imageUrl) {
-            throw new Error("생성된 이미지 URL을 찾을 수 없습니다.");
-          }
-    
-          return { imageUrl, prompt: finalPrompt } satisfies GenerateImageResult;
+        const { isGenerating, generatedAssets } = detailRes.data;
+        if (isGenerating) {
+          sawGenerating = true;
         }
-        if (job.status === "FAILED" || job.status === "CANCELED" || job.status === "EXPIRED") {
-          throw new Error(job.errorMessage ?? "이미지 생성에 실패했습니다.");
+
+        const newImage = generatedAssets.find(
+          (asset) =>
+            asset.assetType === "IMAGE" &&
+            !knownAssetIds.has(asset.assetId) &&
+            Boolean(asset.previewUrl),
+        );
+
+        if (newImage) {
+          return { imageUrl: newImage.previewUrl, prompt } satisfies GenerateImageResult;
+        }
+
+        // 생성이 한 번이라도 시작된 뒤 종료됐는데 결과가 없으면 실패
+        if (sawGenerating && !isGenerating) {
+          throw new Error("이미지 생성에 실패했습니다.");
         }
       }
 

@@ -33,7 +33,6 @@ async function parseJson<T>(res: Response): Promise<T> {
 }
 
 /**
- * 인증이 필요 없는 공개 API용 클라이언트.
  * HTTP 상태코드와 무관하게 응답 바디의 success 플래그로 성공/실패를 판단(절대 throw하지 않음).
  */
 export const publicClient = {
@@ -88,7 +87,12 @@ async function authRequest<T>(
   isRetry = false,
 ): Promise<{ data: T }> {
   const token = useAuthStore.getState().accessToken;
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+  // FormData는 Content-Type을 넣지 않음 — 브라우저가 boundary 포함 multipart 헤더를 자동 설정
+  const headers: Record<string, string> = {};
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -96,7 +100,8 @@ async function authRequest<T>(
   const res = await fetch(buildUrl(path, config.params), {
     method,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body:
+      body === undefined ? undefined : isFormData ? (body as FormData) : JSON.stringify(body),
   });
 
   if (res.status === 401 && !isRetry) {

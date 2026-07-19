@@ -55,11 +55,17 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
     };
   }, [referencePreviews]);
 
-  // 생성 타입 전환 → 해당 페이지로 이동. 비디오/역프롬프트는 아직 프로젝트 개념이 없어 플랫 라우트로 이동
+  // 생성 타입 전환 → 해당 페이지로 이동. 프로젝트 안에서는 이미지/비디오를 프로젝트 라우트로 유지
   const handleTypeChange = (next: string) => {
     setType(next);
-    if (projectId && next === "이미지 생성") {
-      return;
+    if (projectId) {
+      if (next === "이미지 생성") {
+        return;
+      }
+      if (next === "비디오 생성") {
+        router.push(`/project/${projectId}/video`);
+        return;
+      }
     }
     const href = GENERATION_TYPE_ROUTES[next];
     if (href) {
@@ -105,7 +111,7 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
       }
       setSubmittedPrompt(trimmedPrompt);
       setPrompt("");
-      generation.mutate({ prompt: trimmedPrompt, referenceImage: referenceImages[0] });
+      generation.mutate({ prompt: trimmedPrompt, referenceImages });
     });
   };
 

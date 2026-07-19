@@ -1,5 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createProject, deleteProject, getProjects, updateProject } from "@/lib/projects";
+import {
+  createProject,
+  deleteProject,
+  getProject,
+  getProjects,
+  updateProject,
+} from "@/lib/projects";
 import { useAuthStore } from "@/stores/authStore";
 import type { ProjectPayload } from "@/types/project.types";
 
@@ -10,6 +16,16 @@ export function useProjects() {
     queryKey: ["projects"],
     queryFn: getProjects,
     enabled: isLoggedIn,
+  });
+}
+
+/** 프로젝트 상세 조회 */
+export function useProject(projectId?: number | null) {
+  const isLoggedIn = useAuthStore((s) => !!s.user);
+  return useQuery({
+    queryKey: ["projects", projectId],
+    queryFn: () => getProject(projectId!),
+    enabled: isLoggedIn && typeof projectId === "number" && !Number.isNaN(projectId),
   });
 }
 
@@ -30,8 +46,9 @@ export function useUpdateProject() {
   return useMutation({
     mutationFn: ({ projectId, payload }: { projectId: number; payload: ProjectPayload }) =>
       updateProject(projectId, payload),
-    onSuccess: () => {
+    onSuccess: (_data, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["projects", projectId] });
     },
   });
 }

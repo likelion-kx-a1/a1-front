@@ -95,13 +95,14 @@ export default function LibraryNav() {
     });
   };
 
-  // 프로젝트 클릭 → 펼침/접힘 토글
+  // 프로젝트 클릭 → 해당 프로젝트 이미지 생성 페이지로 이동 + 펼침/접힘 토글
   const handleProjectClick = (projectId: number) => {
     if (clickTimeoutRef.current) {
       clearTimeout(clickTimeoutRef.current);
     }
     clickTimeoutRef.current = setTimeout(() => {
       toggleExpanded(projectId);
+      router.push(`/project/${projectId}/image`);
     }, CLICK_DELAY_MS);
   };
 
@@ -217,7 +218,7 @@ export default function LibraryNav() {
                 onClick={() => handleProjectClick(project.projectId)}
                 onDoubleClick={() => handleProjectDoubleClick(project)}
                 aria-expanded={isExpanded}
-                aria-label={`${project.name} (클릭하여 펼치기/접기, 더블클릭하여 이름 수정)`}
+                aria-label={`${project.name} (클릭하여 프로젝트 열기, 더블클릭하여 이름 수정)`}
                 className={`${itemStyle} pr-10`}
               >
                 <span className="truncate">{project.name}</span>

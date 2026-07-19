@@ -9,6 +9,7 @@ import type {
   ChatListParams,
   ChatMessage,
   ChatPayload,
+  GeneratedAsset,
   SendChatMessagePayload,
   UpdateChatPayload,
 } from "@/types/chat.types";
@@ -68,6 +69,16 @@ export async function sendChatMessage(
   return data;
 }
 
+/** 채팅 상세의 generatedAssets */
+export function getGeneratedAssets(detail: ChatDetail): GeneratedAsset[] {
+  return detail.generatedAssets ?? [];
+}
+
+/** 채팅 상세의 messages */
+export function getChatMessages(detail: ChatDetail): ChatMessage[] {
+  return detail.messages ?? [];
+}
+
 /** 채팅 순번 제목 */
 export function formatChatSequenceTitle(index: number): string {
   return `채팅${String(index).padStart(2, "0")}`;
@@ -89,7 +100,7 @@ export async function ensureChatForGeneration(
 ): Promise<{ chatId: number }> {
   const listParams = projectId !== null ? { projectId } : { outsideProject: true };
   const listRes = await getChats(listParams);
-  const chats = listRes.success ? listRes.data : [];
+  const chats = listRes.success ? (listRes.data ?? []) : [];
 
   if (chats.length > 0) {
     const latest = [...chats].sort(

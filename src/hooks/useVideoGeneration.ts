@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import { ensureChatForGeneration, getChatDetail, sendChatMessage } from "@/lib/chats";
+import { ensureChatForGeneration, getChatDetail, getGeneratedAssets, sendChatMessage } from "@/lib/chats";
 import { useAuthStore } from "@/stores/authStore";
 
 const POLL_INTERVAL_MS = 3000;
@@ -16,6 +16,7 @@ interface GenerateVideoParams {
 
 interface GenerateVideoResult {
   videoUrl: string;
+  mediaId: number;
   prompt: string;
 }
 
@@ -50,7 +51,7 @@ export function useVideoGeneration(projectId?: number | null) {
       const beforeRes = await getChatDetail(chatId);
       const knownAssetIds = new Set(
         beforeRes.success
-          ? beforeRes.data.generatedAssets.map((asset) => asset.assetId)
+          ? getGeneratedAssets(beforeRes.data).map((asset) => asset.assetId)
           : [],
       );
 
@@ -72,7 +73,8 @@ export function useVideoGeneration(projectId?: number | null) {
           throw new Error(detailRes.error.message);
         }
 
-        const { isGenerating, generatedAssets } = detailRes.data;
+        const { isGenerating } = detailRes.data;
+        const generatedAssets = getGeneratedAssets(detailRes.data);
         if (isGenerating) {
           sawGenerating = true;
         }
@@ -85,7 +87,11 @@ export function useVideoGeneration(projectId?: number | null) {
         );
 
         if (newVideo) {
-          return { videoUrl: newVideo.previewUrl, prompt } satisfies GenerateVideoResult;
+          return {
+            videoUrl: newVideo.previewUrl,
+            mediaId: newVideo.assetId,
+            prompt,
+          } satisfies GenerateVideoResult;
         }
 
         // 생성이 한 번이라도 시작된 뒤 종료됐는데 결과가 없으면 실패

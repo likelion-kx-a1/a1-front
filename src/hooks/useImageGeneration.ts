@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import { ensureChatForGeneration, getChatDetail, sendChatMessage } from "@/lib/chats";
+import { ensureChatForGeneration, getChatDetail, getGeneratedAssets, sendChatMessage } from "@/lib/chats";
 import { useAuthStore } from "@/stores/authStore";
 
 const POLL_INTERVAL_MS = 3000;
@@ -16,6 +16,7 @@ interface GenerateImageParams {
 
 interface GenerateImageResult {
   imageUrl: string;
+  mediaId: number;
   prompt: string;
 }
 
@@ -51,7 +52,7 @@ export function useImageGeneration(projectId?: number | null) {
       const beforeRes = await getChatDetail(chatId);
       const knownAssetIds = new Set(
         beforeRes.success
-          ? beforeRes.data.generatedAssets.map((asset) => asset.assetId)
+          ? getGeneratedAssets(beforeRes.data).map((asset) => asset.assetId)
           : [],
       );
 
@@ -73,7 +74,8 @@ export function useImageGeneration(projectId?: number | null) {
           throw new Error(detailRes.error.message);
         }
 
-        const { isGenerating, generatedAssets } = detailRes.data;
+        const { isGenerating } = detailRes.data;
+        const generatedAssets = getGeneratedAssets(detailRes.data);
         if (isGenerating) {
           sawGenerating = true;
         }
@@ -86,7 +88,11 @@ export function useImageGeneration(projectId?: number | null) {
         );
 
         if (newImage) {
-          return { imageUrl: newImage.previewUrl, prompt } satisfies GenerateImageResult;
+          return {
+            imageUrl: newImage.previewUrl,
+            mediaId: newImage.assetId,
+            prompt,
+          } satisfies GenerateImageResult;
         }
 
         // 생성이 한 번이라도 시작된 뒤 종료됐는데 결과가 없으면 실패

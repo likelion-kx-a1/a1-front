@@ -72,8 +72,8 @@ export interface ChatDetail {
   projectId: number | null;
   title: string;
   isGenerating: boolean;
-  messages: ChatMessage[];
-  generatedAssets: GeneratedAsset[];
+  messages?: ChatMessage[];
+  generatedAssets?: GeneratedAsset[];
 }
 
 /** POST /api/chats/{chatId}/messages 요청 (FormData로 전송) */

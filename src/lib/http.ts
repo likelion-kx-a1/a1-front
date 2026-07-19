@@ -3,11 +3,20 @@
  */
 
 import { useAuthStore } from "@/stores/authStore";
-import type { ApiResponse } from "@/types/api.types";
+import type { ApiErrorResponse, ApiResponse } from "@/types/api.types";
 import type { RefreshResult } from "@/types/auth.types";
 import { clearRefreshToken, getRefreshToken } from "./tokenStorage";
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+
+/** HTTP 403 등 공통 권한 오류 안내 */
+const FORBIDDEN_MESSAGES: Record<string, string> = {
+  SIGNUP_PENDING: "관리자 승인 후 이용 가능합니다.",
+  SIGNUP_REJECTED: "회원가입 신청이 거절되었습니다.",
+  ACCOUNT_INACTIVE: "계정이 비활성화되어 있습니다. 관리자에게 문의해 주세요.",
+  ACCESS_DENIED: "접근 권한이 없습니다.",
+  FORBIDDEN: "접근 권한이 없습니다.",
+};
 
 interface RequestConfig {
   params?: Record<string, string | number | boolean | undefined>;
@@ -30,6 +39,38 @@ function buildUrl(path: string, params?: RequestConfig["params"]): string {
 
 async function parseJson<T>(res: Response): Promise<T> {
   return (await res.json()) as T;
+}
+
+async function readErrorMessage(res: Response): Promise<string> {
+  try {
+    const body = await parseJson<ApiErrorResponse | { message?: string }>(res.clone());
+    if ("error" in body && body.error?.message) {
+      const code = body.error.code;
+      return FORBIDDEN_MESSAGES[code] ?? body.error.message;
+    }
+    if ("message" in body && typeof body.message === "string" && body.message) {
+      return body.message;
+    }
+  } catch {
+    // JSON 파싱 실패 시 아래 기본 문구 사용
+  }
+
+  if (res.status === 403) {
+    return "접근 권한이 없습니다. 관리자 승인 여부를 확인해 주세요.";
+  }
+  if (res.status === 401) {
+    return "로그인이 필요합니다. 다시 로그인해 주세요.";
+  }
+  return `Request failed with status code ${res.status}`;
+}
+
+/** accessToken이 없으면 refreshToken으로 선발급 */
+async function ensureAccessToken(): Promise<string | null> {
+  const existing = useAuthStore.getState().accessToken;
+  if (existing) {
+    return existing;
+  }
+  return refreshAccessToken();
 }
 
 /**
@@ -86,7 +127,7 @@ async function authRequest<T>(
   config: RequestConfig,
   isRetry = false,
 ): Promise<{ data: T }> {
-  const token = useAuthStore.getState().accessToken;
+  const token = isRetry ? useAuthStore.getState().accessToken : await ensureAccessToken();
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   // FormData는 Content-Type을 넣지 않음 — 브라우저가 boundary 포함 multipart 헤더를 자동 설정
   const headers: Record<string, string> = {};
@@ -113,11 +154,11 @@ async function authRequest<T>(
     // 재발급 실패 = 세션 종료 → 자동 로그아웃
     clearRefreshToken();
     useAuthStore.getState().clearUser();
-    throw new Error("Request failed with status code 401");
+    throw new Error(await readErrorMessage(res));
   }
 
   if (!res.ok) {
-    throw new Error(`Request failed with status code ${res.status}`);
+    throw new Error(await readErrorMessage(res));
   }
 
   return { data: await parseJson<T>(res) };

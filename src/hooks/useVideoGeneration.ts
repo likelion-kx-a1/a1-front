@@ -1,6 +1,6 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import { createChat, getChatDetail, sendChatMessage } from "@/lib/chats";
+import { ensureChatForGeneration, getChatDetail, sendChatMessage } from "@/lib/chats";
 import { useAuthStore } from "@/stores/authStore";
 
 const POLL_INTERVAL_MS = 3000;
@@ -26,6 +26,7 @@ interface GenerateVideoResult {
  */
 export function useVideoGeneration(projectId?: number | null) {
   const user = useAuthStore((s) => s.user);
+  const queryClient = useQueryClient();
   const chatIdRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -39,11 +40,9 @@ export function useVideoGeneration(projectId?: number | null) {
       }
 
       if (chatIdRef.current === null) {
-        const chatRes = await createChat({ projectId: projectId ?? null, title: prompt });
-        if (!chatRes.success) {
-          throw new Error(chatRes.error.message);
-        }
-        chatIdRef.current = chatRes.data.chatId;
+        const { chatId } = await ensureChatForGeneration(projectId ?? null);
+        chatIdRef.current = chatId;
+        void queryClient.invalidateQueries({ queryKey: ["chats"] });
       }
       const chatId = chatIdRef.current;
 

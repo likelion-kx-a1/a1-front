@@ -1,6 +1,6 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import { createChat, getChatDetail, sendChatMessage } from "@/lib/chats";
+import { ensureChatForGeneration, getChatDetail, sendChatMessage } from "@/lib/chats";
 import { useAuthStore } from "@/stores/authStore";
 
 const POLL_INTERVAL_MS = 3000;
@@ -26,6 +26,7 @@ interface GenerateImageResult {
  */
 export function useImageGeneration(projectId?: number | null) {
   const user = useAuthStore((s) => s.user);
+  const queryClient = useQueryClient();
   // 이 훅이 마운트된 동안(같은 세션)에는 최초 생성 시 만든 채팅을 재사용
   const chatIdRef = useRef<number | null>(null);
 
@@ -40,11 +41,9 @@ export function useImageGeneration(projectId?: number | null) {
       }
 
       if (chatIdRef.current === null) {
-        const chatRes = await createChat({ projectId: projectId ?? null, title: prompt });
-        if (!chatRes.success) {
-          throw new Error(chatRes.error.message);
-        }
-        chatIdRef.current = chatRes.data.chatId;
+        const { chatId } = await ensureChatForGeneration(projectId ?? null);
+        chatIdRef.current = chatId;
+        void queryClient.invalidateQueries({ queryKey: ["chats"] });
       }
       const chatId = chatIdRef.current;
 

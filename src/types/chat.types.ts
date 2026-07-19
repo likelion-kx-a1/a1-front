@@ -4,7 +4,7 @@ export type AssetType = "IMAGE" | "VIDEO";
 /** 이미지 카테고리 (assetType이 IMAGE일 때만) */
 export type ImageCategory = "CHARACTER" | "BACKGROUND";
 
-/** POST /api/chats 응답 항목 */
+/** POST /api/chats, GET /api/chats 응답 항목 */
 export interface Chat {
   chatId: number;
   projectId: number | null;
@@ -13,11 +13,25 @@ export interface Chat {
   status: string;
   createdAt: string;
   updatedAt: string;
+  /** 목록 조회 시 제공될 수 있는 미리보기 URL */
+  previewUrl?: string | null;
+}
+
+/** GET /api/chats 쿼리 */
+export interface ChatListParams {
+  [key: string]: string | number | boolean | undefined;
+  projectId?: number;
+  outsideProject?: boolean;
 }
 
 /** 채팅 생성 요청 바디 */
 export interface ChatPayload {
   projectId: number | null;
+  title: string;
+}
+
+/** PATCH /api/chats/{chatId} 제목 수정 */
+export interface UpdateChatPayload {
   title: string;
 }
 

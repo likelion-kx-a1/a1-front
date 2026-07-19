@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
@@ -183,9 +184,12 @@ export default function LibraryNav() {
 
   return (
     <nav aria-label="내 라이브러리" className="flex flex-col gap-4">
-      <h3 className="flex items-center gap-2 px-4 py-3 text-xl text-white">
+      <Link
+        href="/library"
+        className="flex items-center gap-2 px-4 py-3 text-xl text-white hover:text-gray-200"
+      >
         <IconBadge icon={LibraryIcon} />내 라이브러리
-      </h3>
+      </Link>
 
       <ul className="flex flex-col gap-2 pl-10">
         {projects.map((project) => {

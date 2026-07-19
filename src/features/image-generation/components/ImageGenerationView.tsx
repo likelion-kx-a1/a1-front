@@ -12,12 +12,21 @@ import GeneratingSpinner from "@/components/ui/GeneratingSpinner";
 import AuthModal from "@/features/auth/components/AuthModal";
 import OptionDropdown from "@/components/ui/OptionDropdown";
 import { useImageGeneration } from "@/hooks/useImageGeneration";
+import { useSaveToLibrary } from "@/hooks/useMedia";
 import {
   GENERATION_TYPE_OPTIONS,
   GENERATION_TYPE_ROUTES,
   RATIO_OPTIONS,
   RESOLUTION_OPTIONS,
 } from "@/lib/generationTypes";
+import { buildSaveDisplayName } from "@/lib/media";
+import {
+  buildMediaFilename,
+  copyImageToClipboard,
+  copyTextToClipboard,
+  downloadFromUrl,
+} from "@/lib/mediaActions";
+import SaveProjectPickerModal from "@/features/library/components/SaveProjectPickerModal";
 import { useAuthStore } from "@/stores/authStore";
 
 interface ImageGenerationViewProps {
@@ -40,7 +49,10 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
 
   const [submittedPrompt, setSubmittedPrompt] = useState("");
   const [copied, setCopied] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
+  const [actionPending, setActionPending] = useState(false);
   const generation = useImageGeneration(projectId);
+  const saveToLibrary = useSaveToLibrary(projectId);
 
   // 선택한 참고 이미지들의 미리보기 URL
   const referencePreviews = useMemo(
@@ -121,6 +133,84 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
     window.setTimeout(() => setCopied(false), 2000);
   };
 
+  const showActionMessage = (message: string) => {
+    setActionMessage(message);
+    window.setTimeout(() => setActionMessage(""), 2000);
+  };
+
+  const imageUrl = generation.isSuccess ? generation.data.imageUrl : null;
+  const mediaId = generation.isSuccess ? generation.data.mediaId : null;
+
+  /** 저장 — 라이브러리(마이페이지)에 등록 */
+  const handleSaveImage = async () => {
+    if (!mediaId) {
+      return;
+    }
+    setActionPending(true);
+    try {
+      const res = await saveToLibrary.save({
+        mediaId,
+        displayName: buildSaveDisplayName(submittedPrompt, "생성 이미지"),
+      });
+      if (res) {
+        showActionMessage("라이브러리에 저장되었습니다.");
+      }
+    } catch {
+      showActionMessage("라이브러리 저장에 실패했습니다.");
+    } finally {
+      setActionPending(false);
+    }
+  };
+
+  const handleConfirmSaveProject = async (selectedProjectId: number) => {
+    setActionPending(true);
+    try {
+      await saveToLibrary.confirmProject(selectedProjectId);
+      showActionMessage("라이브러리에 저장되었습니다.");
+    } catch {
+      showActionMessage("라이브러리 저장에 실패했습니다.");
+    } finally {
+      setActionPending(false);
+    }
+  };
+
+  /** 복사 — 이미지 복사 (실패 시 URL 복사) */
+  const handleCopyImage = async () => {
+    if (!imageUrl) {
+      return;
+    }
+    setActionPending(true);
+    try {
+      const mode = await copyImageToClipboard(imageUrl);
+      showActionMessage(mode === "image" ? "이미지가 복사되었습니다." : "이미지 링크가 복사되었습니다.");
+    } catch {
+      try {
+        await copyTextToClipboard(imageUrl);
+        showActionMessage("이미지 링크가 복사되었습니다.");
+      } catch {
+        showActionMessage("복사에 실패했습니다.");
+      }
+    } finally {
+      setActionPending(false);
+    }
+  };
+
+  /** 다운로드 — 이미지 파일 다운로드 */
+  const handleDownloadImage = async () => {
+    if (!imageUrl) {
+      return;
+    }
+    setActionPending(true);
+    try {
+      await downloadFromUrl(imageUrl, buildMediaFilename(submittedPrompt, "png"));
+      showActionMessage("다운로드를 시작했습니다.");
+    } catch {
+      showActionMessage("다운로드에 실패했습니다.");
+    } finally {
+      setActionPending(false);
+    }
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col items-center justify-end gap-6 py-10">
       {/* 캔버스 / 생성 결과 */}
@@ -144,32 +234,40 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
               >
                 <button
                   type="button"
-                  disabled
-                  aria-label="이미지 저장 (준비 중)"
-                  title="준비 중인 기능입니다"
-                  className="flex h-12 cursor-not-allowed items-center justify-center rounded-lg bg-[#333] px-6 text-base text-white opacity-50"
+                  onClick={handleSaveImage}
+                  disabled={actionPending || saveToLibrary.isPending}
+                  aria-label="라이브러리에 저장"
+                  className="flex h-12 items-center justify-center rounded-lg bg-[#333] px-6 text-base text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   저장
                 </button>
                 <button
                   type="button"
-                  disabled
-                  aria-label="이미지 링크 복사 (준비 중)"
-                  title="준비 중인 기능입니다"
-                  className="flex size-12 cursor-not-allowed items-center justify-center rounded-lg bg-[#333] text-white opacity-50"
+                  onClick={handleCopyImage}
+                  disabled={actionPending}
+                  aria-label="이미지 복사"
+                  className="flex size-12 items-center justify-center rounded-lg bg-[#333] text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <CopyIcon className="size-6" aria-hidden />
                 </button>
                 <button
                   type="button"
-                  disabled
-                  aria-label="이미지 다운로드 (준비 중)"
-                  title="준비 중인 기능입니다"
-                  className="flex size-12 cursor-not-allowed items-center justify-center rounded-lg bg-[#333] text-white opacity-50"
+                  onClick={handleDownloadImage}
+                  disabled={actionPending}
+                  aria-label="이미지 다운로드"
+                  className="flex size-12 items-center justify-center rounded-lg bg-[#333] text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <DownloadIcon className="size-6" aria-hidden />
                 </button>
               </div>
+              {actionMessage && (
+                <p
+                  role="status"
+                  className="absolute bottom-4 left-4 rounded-lg bg-black/70 px-3 py-2 text-sm text-white"
+                >
+                  {actionMessage}
+                </p>
+              )}
             </div>
           ) : generation.isError ? (
             <div className="flex h-[450px] w-full max-w-[800px] items-center justify-center rounded-2xl bg-[#222] p-6 text-center text-red-400">
@@ -306,6 +404,12 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
       </div>
 
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+      <SaveProjectPickerModal
+        open={saveToLibrary.pickerOpen}
+        onClose={saveToLibrary.cancelPicker}
+        onSelect={handleConfirmSaveProject}
+        pending={actionPending}
+      />
     </div>
   );
 }

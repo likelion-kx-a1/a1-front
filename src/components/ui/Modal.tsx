@@ -41,7 +41,7 @@ export default function Modal({
     // 바깥 클릭 시 닫힘
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-      onClick={onClose}
+      // onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label={label}

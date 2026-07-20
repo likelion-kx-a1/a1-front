@@ -18,8 +18,9 @@ import { clearRefreshToken } from "./tokenStorage";
 
 /** 아이디 중복 확인 — GET /api/auth/check-login-id (available: true면 사용 가능) */
 export async function checkLoginId(loginId: string): Promise<boolean> {
-  const data = await unwrapApiResponse<{ available: boolean }>(
-    publicClient.get("/api/auth/check-login-id", { params: { loginId } }),
+  const { data } = await publicClient.get<ApiResponse<{ available: boolean }>>(
+    "/api/auth/check-login-id",
+    { params: { loginId } },
   );
   return data.success && data.data?.available === true;
 }
@@ -65,12 +66,14 @@ export async function resetPassword(
 
 /** 회원가입 신청 — POST /api/auth/signup */
 export async function signup(payload: SignupPayload): Promise<ApiResponse<SignupResult>> {
-  return unwrapApiResponse<SignupResult>(publicClient.post("/api/auth/signup", payload));
+  const { data } = await publicClient.post<ApiResponse<SignupResult>>("/api/auth/signup", payload);
+  return data;
 }
 
 /** 로그인 — POST /api/auth/login */
 export async function login(payload: LoginPayload): Promise<ApiResponse<LoginResult>> {
-  return unwrapApiResponse<LoginResult>(publicClient.post("/api/auth/login", payload));
+  const { data } = await publicClient.post<ApiResponse<LoginResult>>("/api/auth/login", payload);
+  return data;
 }
 
 export { saveRefreshToken, getRefreshToken } from "./tokenStorage";

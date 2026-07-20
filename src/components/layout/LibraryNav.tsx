@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import CloseIcon from "@/components/icons/CloseIcon";
@@ -10,6 +10,7 @@ import IconBadge from "@/components/layout/IconBadge";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import AuthModal from "@/features/auth/components/AuthModal";
+import ProjectNavSubmenu from "@/features/library/components/ProjectNavSubmenu";
 import {
   useCreateProject,
   useDeleteProject,
@@ -28,8 +29,18 @@ const itemStyle =
 /** 새 프로젝트 기본 이름 */
 const DEFAULT_PROJECT_NAME = "Untitled";
 
+function getProjectIdFromPath(pathname: string): number | null {
+  const match = pathname.match(/^\/(?:library|project)\/(\d+)/);
+  if (!match) {
+    return null;
+  }
+  const id = Number(match[1]);
+  return Number.isNaN(id) ? null : id;
+}
+
 export default function LibraryNav() {
   const router = useRouter();
+  const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
@@ -48,7 +59,8 @@ export default function LibraryNav() {
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 언마운트 시 대기 중인 클릭 타이머 정리
+  const activeProjectId = getProjectIdFromPath(pathname);
+
   useEffect(() => {
     return () => {
       if (clickTimeoutRef.current) {
@@ -57,7 +69,6 @@ export default function LibraryNav() {
     };
   }, []);
 
-  // "새 프로젝트" 클릭 → 로그인 상태에서만 기본 이름(Untitled)으로 새 프로젝트 생성
   const handleCreateProject = () => {
     if (!user) {
       setAuthModalOpen(true);
@@ -69,7 +80,8 @@ export default function LibraryNav() {
       {
         onSuccess: (res) => {
           if (res.success) {
-            router.push(`/project/${res.data.projectId}/image`);
+            setExpandedIds((prev) => new Set(prev).add(res.data.projectId));
+            router.push(`/library/${res.data.projectId}`);
           } else {
             setActionError(res.error.message);
           }
@@ -96,18 +108,16 @@ export default function LibraryNav() {
     });
   };
 
-  // 프로젝트 클릭 → 해당 프로젝트 이미지 생성 페이지로 이동 + 펼침/접힘 토글
+  // 클릭 → 펼침/접힘 토글 (더블클릭과 구분)
   const handleProjectClick = (projectId: number) => {
     if (clickTimeoutRef.current) {
       clearTimeout(clickTimeoutRef.current);
     }
     clickTimeoutRef.current = setTimeout(() => {
       toggleExpanded(projectId);
-      router.push(`/project/${projectId}/image`);
     }, CLICK_DELAY_MS);
   };
 
-  // 더블클릭 → 이동 취소하고 이름 수정 모드로 전환
   const handleProjectDoubleClick = (project: Project) => {
     if (clickTimeoutRef.current) {
       clearTimeout(clickTimeoutRef.current);
@@ -116,7 +126,6 @@ export default function LibraryNav() {
     startEditing(project);
   };
 
-  // 이름 수정 확정 — 빈 문자열이면 기본 이름으로 되돌림, 서버엔 name/description 통째로 반영
   const commitEditing = () => {
     if (editingId === null) {
       return;
@@ -191,7 +200,7 @@ export default function LibraryNav() {
         <IconBadge icon={LibraryIcon} />내 라이브러리
       </Link>
 
-      <ul className="flex flex-col gap-2 pl-10">
+      <ul className="flex flex-col gap-2 pl-10" aria-label="프로젝트 목록">
         {projects.map((project) => {
           if (editingId === project.projectId) {
             return (
@@ -214,35 +223,41 @@ export default function LibraryNav() {
           }
 
           const isExpanded = expandedIds.has(project.projectId);
+          const isActive = activeProjectId === project.projectId;
 
           return (
-            <li key={project.projectId} className="group relative">
-              <button
-                type="button"
-                onClick={() => handleProjectClick(project.projectId)}
-                onDoubleClick={() => handleProjectDoubleClick(project)}
-                aria-expanded={isExpanded}
-                aria-label={`${project.name} (클릭하여 프로젝트 열기, 더블클릭하여 이름 수정)`}
-                className={`${itemStyle} pr-10`}
-              >
-                <span className="truncate">{project.name}</span>
-              </button>
-              <span
-                aria-hidden
-                className={`pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-base text-gray-400 transition-transform group-hover:hidden ${
-                  isExpanded ? "rotate-90" : ""
-                }`}
-              >
-                ▸
-              </span>
-              <button
-                type="button"
-                onClick={() => openDeleteModal(project)}
-                aria-label={`${project.name} 삭제`}
-                className="absolute top-1/2 right-2 hidden size-6 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 group-hover:flex hover:text-white"
-              >
-                <CloseIcon className="size-4" aria-hidden />
-              </button>
+            <li key={project.projectId} className="group">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => handleProjectClick(project.projectId)}
+                  onDoubleClick={() => handleProjectDoubleClick(project)}
+                  aria-expanded={isExpanded}
+                  aria-current={isActive ? "true" : undefined}
+                  aria-label={`${project.name} (클릭하여 펼치기 또는 접기, 더블클릭하여 이름 수정)`}
+                  className={`${itemStyle} gap-2 pr-10 ${isActive ? "ring-1 ring-gray-600" : ""}`}
+                >
+                  <span className="min-w-0 flex-1 truncate text-left">{project.name}</span>
+                  <span
+                    aria-hidden
+                    className={`shrink-0 text-base text-gray-400 transition-transform ${
+                      isExpanded ? "rotate-90" : ""
+                    }`}
+                  >
+                    ▸
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openDeleteModal(project)}
+                  aria-label={`${project.name} 삭제`}
+                  className="absolute top-1/2 right-2 hidden size-6 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 group-hover:flex hover:text-white"
+                >
+                  <CloseIcon className="size-4" aria-hidden />
+                </button>
+              </div>
+
+              {isExpanded && <ProjectNavSubmenu projectId={project.projectId} />}
             </li>
           );
         })}
@@ -273,7 +288,6 @@ export default function LibraryNav() {
 
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
 
-      {/* 프로젝트 삭제 확인 모달 */}
       <Modal open={!!deleteTarget} onClose={closeDeleteModal} label="프로젝트 삭제">
         <div className="flex flex-col gap-6 p-6">
           <h2 className="text-xl font-semibold text-white">프로젝트 삭제</h2>

@@ -90,6 +90,21 @@ export function isPlaceholderChatTitle(title: string | null | undefined): boolea
   return !t || t === "untitled" || t === "untitled chat";
 }
 
+/** 목록/사이드바용 채팅 표시명 — 순번은 1부터 */
+export function resolveChatListTitle(chat: Chat, sequenceIndex: number): string {
+  if (isPlaceholderChatTitle(chat.title)) {
+    return formatChatSequenceTitle(sequenceIndex);
+  }
+  return chat.title.trim();
+}
+
+/** 생성 시각 기준 오름차순 정렬 */
+export function sortChatsByCreatedAt(chats: Chat[]): Chat[] {
+  return [...chats].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  );
+}
+
 /**
  * 프로젝트(또는 독립) 채팅을 준비하고 chatId를 반환.
  * - 기존 채팅이 있으면 재사용 (제목이 Untitled면 채팅NN으로 PATCH)

@@ -1,10 +1,10 @@
-import LibraryProjectView from "@/features/library/components/LibraryProjectView";
+import ProjectStorageView from "@/features/library/components/ProjectStorageView";
 
-interface LibraryProjectPageProps {
+interface ProjectStoragePageProps {
   params: Promise<{ projectId: string }>;
 }
 
-export default async function LibraryProjectPage({ params }: LibraryProjectPageProps) {
+export default async function ProjectStoragePage({ params }: ProjectStoragePageProps) {
   const { projectId } = await params;
-  return <LibraryProjectView projectId={Number(projectId)} />;
+  return <ProjectStorageView projectId={Number(projectId)} />;
 }

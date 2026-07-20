@@ -26,6 +26,8 @@ interface OptionDropdownProps {
   chevron?: boolean;
   /** 펼친 목록에서도 아이콘을 보일지 (기본 true) */
   listIcon?: boolean;
+  /** 트리거 버튼에 표시할 고정 라벨 (없으면 value 표시) */
+  triggerLabel?: string;
   className?: string;
 }
 
@@ -80,6 +82,7 @@ export default function OptionDropdown({
   size = "sm",
   chevron = true,
   listIcon = true,
+  triggerLabel,
   className = "",
 }: OptionDropdownProps) {
   const [open, setOpen] = useState(false);
@@ -109,6 +112,7 @@ export default function OptionDropdown({
         onClick={() => setOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={open}
+        aria-label={triggerLabel ? `${triggerLabel}: ${value}` : undefined}
         className={twMerge(
           "flex w-full items-center justify-between rounded-lg",
           TRIGGER_SIZE[size],
@@ -116,8 +120,9 @@ export default function OptionDropdown({
         )}
       >
         <span className={twMerge("flex items-center", TRIGGER_INNER[size])}>
-          {selected?.icon ?? <span className={twMerge("shrink-0", ICON_SIZE[size])} aria-hidden />}
-          {value}
+          {!triggerLabel &&
+            (selected?.icon ?? <span className={twMerge("shrink-0", ICON_SIZE[size])} aria-hidden />)}
+          {triggerLabel ?? value}
         </span>
         {chevron && (
           <CaretIcon

@@ -6,6 +6,9 @@ interface CardItem {
   caption?: string;
   previewUrl?: string;
   mediaType?: "IMAGE" | "VIDEO";
+  mediaTypeLabel?: string;
+  metaLine?: string;
+  href?: string;
 }
 
 interface CardSectionProps {
@@ -15,19 +18,25 @@ interface CardSectionProps {
 
 export default function CardSection({ heading, items }: CardSectionProps) {
   return (
-    <section className="flex flex-col gap-4">
-      <h2 className="text-2xl font-bold text-white">{heading}</h2>
-      <div className="grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-3 xl:grid-cols-4">
+    <section className="flex flex-col gap-4" aria-labelledby="card-section-heading">
+      <h2 id="card-section-heading" className="sr-only">
+        {heading}
+      </h2>
+      <ul className="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-3 xl:grid-cols-4">
         {items.map((item, index) => (
-          <MediaCard
-            key={item.id ?? index}
-            title={item.title}
-            caption={item.caption}
-            previewUrl={item.previewUrl}
-            mediaType={item.mediaType}
-          />
+          <li key={item.id ?? index}>
+            <MediaCard
+              title={item.title}
+              caption={item.caption}
+              previewUrl={item.previewUrl}
+              mediaType={item.mediaType}
+              mediaTypeLabel={item.mediaTypeLabel}
+              metaLine={item.metaLine}
+              href={item.href}
+            />
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   );
 }

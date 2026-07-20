@@ -10,6 +10,8 @@ import SignupPendingStatus from "./SignupPendingStatus";
 interface AuthModalProps {
   open: boolean;
   onClose: () => void;
+  /** 로그인 성공 시 호출 (모달이 닫힌 뒤 추가 동작이 필요할 때 사용) */
+  onLoginSuccess?: () => void;
 }
 
 type AuthMode = "login" | "signup" | "pending" | "resetPassword";
@@ -21,7 +23,7 @@ const MODAL_LABEL: Record<AuthMode, string> = {
   resetPassword: "비밀번호 재설정",
 };
 
-export default function AuthModal({ open, onClose }: AuthModalProps) {
+export default function AuthModal({ open, onClose, onLoginSuccess }: AuthModalProps) {
   const [mode, setMode] = useState<AuthMode>("login");
   const [appliedAt, setAppliedAt] = useState("");
 
@@ -54,7 +56,10 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
         <LoginForm
           onSwitchToSignup={() => setMode("signup")}
           onSwitchToResetPassword={() => setMode("resetPassword")}
-          onSuccess={handleClose}
+          onSuccess={() => {
+            handleClose();
+            onLoginSuccess?.();
+          }}
         />
       ) : mode === "resetPassword" ? (
         <ResetPasswordForm onSwitchToLogin={() => setMode("login")} onClose={handleClose} />

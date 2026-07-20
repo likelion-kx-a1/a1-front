@@ -1,53 +1,56 @@
-import LibraryNav from "@/features/library/components/LibraryNav";
+import Link from "next/link";
+import HomeIcon from "@/components/icons/HomeIcon";
+import ImageIcon from "@/components/icons/ImageIcon";
+import ReversePromptIcon from "@/components/icons/ReversePromptIcon";
+import VideoIcon from "@/components/icons/VideoIcon";
+import IconBadge from "@/components/layout/IconBadge";
+import LibraryNav from "@/components/layout/LibraryNav";
 
-const createMenus = ["이미지 생성", "비디오 생성", "스토리보드 생성"];
+/** 생성 메뉴 */
+const createMenus = [
+  { label: "이미지 생성", href: "/image", icon: ImageIcon },
+  { label: "비디오 생성", href: "/video", icon: VideoIcon },
+  { label: "역 프롬프트", href: "/reverse-prompt", icon: ReversePromptIcon },
+];
 
-/** 임시 아이콘 자리표시 */
-function IconPlaceholder() {
-  return <span className="size-6 shrink-0 rounded-md bg-gray-400" aria-hidden />;
-}
+const menuStyle = "flex items-center gap-2 rounded-lg px-4 py-3 text-xl hover:bg-gray-900";
 
 export default function Sidebar() {
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r border-gray-800 bg-black text-gray-200">
+    <aside className="bg-background border-border flex w-90 shrink-0 flex-col gap-10 border-r-2 p-6 text-gray-200">
       {/* 서비스명 */}
-      <div className="flex items-center gap-3 px-5 py-5">
-        <span className="size-8 rounded-md bg-gray-300" aria-hidden />
-        <span className="text-lg font-bold text-white">서비스명</span>
+      <div className="flex items-center gap-4">
+        <span className="size-10 bg-[#6b6b6b]" aria-hidden />
+        <span className="text-2xl font-medium text-white">서비스명</span>
       </div>
 
-      {/* 네비게이션 */}
-      <nav className="flex flex-1 flex-col gap-1 px-3">
-        <button className="flex items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-gray-900">
-          <IconPlaceholder />
-          <span>홈</span>
-        </button>
+      <nav aria-label="주요 메뉴" className="flex flex-1 flex-col gap-4">
+        <ul>
+          <li>
+            <Link href="/" className={menuStyle}>
+              <IconBadge icon={HomeIcon} />
+              <span>홈</span>
+            </Link>
+          </li>
+        </ul>
 
-        {/* 라이브러리 (접기/펼치기 토글) */}
+        <hr aria-hidden className="border-gray-800" />
+
+        <ul className="flex flex-col gap-4">
+          {createMenus.map((menu) => (
+            <li key={menu.label}>
+              <Link href={menu.href} className={menuStyle}>
+                <IconBadge icon={menu.icon} />
+                <span>{menu.label}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        <hr aria-hidden className="border-gray-800" />
+
         <LibraryNav />
-
-        <hr className="my-2 border-gray-800" />
-
-        {/* 생성 메뉴 */}
-        {createMenus.map((menu) => (
-          <button
-            key={menu}
-            className="flex items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-gray-900"
-          >
-            <IconPlaceholder />
-            <span>{menu}</span>
-          </button>
-        ))}
       </nav>
-
-      {/* 계정 */}
-      <div className="flex items-center gap-3 border-t border-gray-800 px-5 py-4">
-        <span className="size-8 rounded-full bg-gray-300" aria-hidden />
-        <div className="flex flex-col leading-tight">
-          <span className="text-sm text-white">계정</span>
-          <span className="text-xs text-gray-500">구독 상태</span>
-        </div>
-      </div>
     </aside>
   );
 }

@@ -1,36 +1,176 @@
-import axios, { type AxiosResponse } from "axios";
-import type { ApiResponse } from "@/types/api.types";
+/**
+ * fetch 기반 API 클라이언트
+ */
 
-/** 인증이 필요 없는 API 호출용 axios 클라이언트 */
-export const publicClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
-  headers: { "Content-Type": "application/json" },
-});
+import { useAuthStore } from "@/stores/authStore";
+import type { ApiErrorResponse, ApiResponse } from "@/types/api.types";
+import type { RefreshResult } from "@/types/auth.types";
+import { clearRefreshToken, getRefreshToken } from "./tokenStorage";
+
+const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+
+/** HTTP 403 등 공통 권한 오류 안내 */
+const FORBIDDEN_MESSAGES: Record<string, string> = {
+  SIGNUP_PENDING: "관리자 승인 후 이용 가능합니다.",
+  SIGNUP_REJECTED: "회원가입 신청이 거절되었습니다.",
+  ACCOUNT_INACTIVE: "계정이 비활성화되어 있습니다. 관리자에게 문의해 주세요.",
+  ACCESS_DENIED: "접근 권한이 없습니다.",
+  FORBIDDEN: "접근 권한이 없습니다.",
+};
+
+interface RequestConfig {
+  params?: Record<string, string | number | boolean | undefined>;
+}
+
+function buildUrl(path: string, params?: RequestConfig["params"]): string {
+  const url = path.startsWith("http") ? path : `${baseURL}${path}`;
+  if (!params) {
+    return url;
+  }
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      query.set(key, String(value));
+    }
+  });
+  const queryString = query.toString();
+  return queryString ? `${url}?${queryString}` : url;
+}
+
+async function parseJson<T>(res: Response): Promise<T> {
+  return (await res.json()) as T;
+}
+
+async function readErrorMessage(res: Response): Promise<string> {
+  try {
+    const body = await parseJson<ApiErrorResponse | { message?: string }>(res.clone());
+    if ("error" in body && body.error?.message) {
+      const code = body.error.code;
+      return FORBIDDEN_MESSAGES[code] ?? body.error.message;
+    }
+    if ("message" in body && typeof body.message === "string" && body.message) {
+      return body.message;
+    }
+  } catch {
+    // JSON 파싱 실패 시 아래 기본 문구 사용
+  }
+
+  if (res.status === 403) {
+    return "접근 권한이 없습니다. 관리자 승인 여부를 확인해 주세요.";
+  }
+  if (res.status === 401) {
+    return "로그인이 필요합니다. 다시 로그인해 주세요.";
+  }
+  return `Request failed with status code ${res.status}`;
+}
+
+/** accessToken이 없으면 refreshToken으로 선발급 */
+async function ensureAccessToken(): Promise<string | null> {
+  const existing = useAuthStore.getState().accessToken;
+  if (existing) {
+    return existing;
+  }
+  return refreshAccessToken();
+}
 
 /**
- * 에러 응답이 `{ error: { code, message } }` 형태(HTTP 4xx)로 오기 때문에,
- * 성공/실패 모두 `{ success, code, message, data }` 형태로 맞춰서 반환한다.
+ * HTTP 상태코드와 무관하게 응답 바디의 success 플래그로 성공/실패를 판단(절대 throw하지 않음).
  */
-export async function unwrapApiResponse<T>(
-  request: Promise<AxiosResponse<ApiResponse<T>>>,
-): Promise<ApiResponse<T>> {
-  try {
-    const { data } = await request;
-    return data;
-  } catch (err) {
-    if (axios.isAxiosError(err) && err.response?.data) {
-      const body = err.response.data as {
-        error?: { code?: string; message?: string };
-        code?: string;
-        message?: string;
-      };
-      return {
-        success: false,
-        code: body.error?.code ?? body.code ?? "UNKNOWN_ERROR",
-        message: body.error?.message ?? body.message ?? "요청 처리 중 오류가 발생했습니다.",
-        data: undefined as unknown as T,
-      };
-    }
-    throw err;
+export const publicClient = {
+  async get<T>(path: string, config: RequestConfig = {}): Promise<{ data: T }> {
+    const res = await fetch(buildUrl(path, config.params));
+    return { data: await parseJson<T>(res) };
+  },
+
+  async post<T>(path: string, body?: unknown): Promise<{ data: T }> {
+    const res = await fetch(buildUrl(path), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+    return { data: await parseJson<T>(res) };
+  },
+};
+
+/**
+ * refreshToken으로 새 accessToken을 받아 authStore(메모리)에 반영.
+ * 401 재시도와 새로고침 시 세션 복원 양쪽에서 재사용.
+ */
+export async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) {
+    return null;
   }
+  try {
+    const { data } = await publicClient.post<ApiResponse<RefreshResult>>("/api/auth/refresh", {
+      refreshToken,
+    });
+    if (data.success) {
+      useAuthStore.getState().setAccessToken(data.data.accessToken);
+      return data.data.accessToken;
+    }
+  } catch {
+    // 재발급 실패 → null 반환, 호출부에서 처리
+  }
+  return null;
 }
+
+/**
+ * 로그인 토큰이 자동으로 실리는 인증 전용 요청.
+ * 401을 받으면 refreshToken으로 재발급 후 원요청을 1회만 재시도하고,
+ * 재발급도 실패하면 세션을 정리(자동 로그아웃)한 뒤 에러를 던진다.
+ */
+async function authRequest<T>(
+  method: "GET" | "POST" | "PATCH" | "DELETE",
+  path: string,
+  body: unknown,
+  config: RequestConfig,
+  isRetry = false,
+): Promise<{ data: T }> {
+  const token = isRetry ? useAuthStore.getState().accessToken : await ensureAccessToken();
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+  // FormData는 Content-Type을 넣지 않음 — 브라우저가 boundary 포함 multipart 헤더를 자동 설정
+  const headers: Record<string, string> = {};
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(buildUrl(path, config.params), {
+    method,
+    headers,
+    body:
+      body === undefined ? undefined : isFormData ? (body as FormData) : JSON.stringify(body),
+  });
+
+  if (res.status === 401 && !isRetry) {
+    const newAccessToken = await refreshAccessToken();
+    if (newAccessToken) {
+      return authRequest<T>(method, path, body, config, true);
+    }
+
+    // 재발급 실패 = 세션 종료 → 자동 로그아웃
+    clearRefreshToken();
+    useAuthStore.getState().clearUser();
+    throw new Error(await readErrorMessage(res));
+  }
+
+  if (!res.ok) {
+    throw new Error(await readErrorMessage(res));
+  }
+
+  return { data: await parseJson<T>(res) };
+}
+
+export const authClient = {
+  get: <T>(path: string, config: RequestConfig = {}) =>
+    authRequest<T>("GET", path, undefined, config),
+  post: <T>(path: string, body?: unknown, config: RequestConfig = {}) =>
+    authRequest<T>("POST", path, body, config),
+  patch: <T>(path: string, body?: unknown, config: RequestConfig = {}) =>
+    authRequest<T>("PATCH", path, body, config),
+  delete: <T>(path: string, config: RequestConfig = {}) =>
+    authRequest<T>("DELETE", path, undefined, config),
+};

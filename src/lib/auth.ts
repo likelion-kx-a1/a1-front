@@ -1,13 +1,20 @@
 /**
  * 인증 관련 API 호출
  *
- * 공통 응답 형식: { success, code, message, data }
+ * 공통 응답 형식: 성공 { success: true, data }, 실패 { success: false, error: { code, message } }
  */
 
 import type { ApiResponse } from "@/types/api.types";
-import type { LoginPayload, LoginResult, SignupPayload, SignupResult } from "@/types/auth.types";
-import { publicClient, unwrapApiResponse } from "./http";
-import { clearTokens } from "./tokenStorage";
+import type {
+  EmailVerificationPurpose,
+  LoginPayload,
+  LoginResult,
+  ResetPasswordPayload,
+  SignupPayload,
+  SignupResult,
+} from "@/types/auth.types";
+import { publicClient } from "./http";
+import { clearRefreshToken } from "./tokenStorage";
 
 /** 아이디 중복 확인 — GET /api/auth/check-login-id (available: true면 사용 가능) */
 export async function checkLoginId(loginId: string): Promise<boolean> {
@@ -18,22 +25,42 @@ export async function checkLoginId(loginId: string): Promise<boolean> {
 }
 
 /** 이메일 인증번호 발송 — POST /api/auth/email/send (만료 시각 반환) */
-export async function requestEmailCode(email: string): Promise<string> {
-  const data = await unwrapApiResponse<{ expiredAt: string }>(
-    publicClient.post("/api/auth/email/send", { email, purpose: "SIGNUP" }),
+export async function requestEmailCode(
+  email: string,
+  purpose: EmailVerificationPurpose = "SIGNUP",
+): Promise<string> {
+  const { data } = await publicClient.post<ApiResponse<{ expiredAt: string }>>(
+    "/api/auth/email/send",
+    { email, purpose },
   );
   if (!data.success) {
-    throw new Error(data.message);
+    throw new Error(data.error.message);
   }
   return data.data.expiredAt;
 }
 
 /** 이메일 인증번호 확인 — POST /api/auth/email/verify (verified: true면 성공) */
-export async function verifyEmailCode(email: string, code: string): Promise<boolean> {
-  const data = await unwrapApiResponse<{ verified: boolean }>(
-    publicClient.post("/api/auth/email/verify", { email, code, purpose: "SIGNUP" }),
+export async function verifyEmailCode(
+  email: string,
+  code: string,
+  purpose: EmailVerificationPurpose = "SIGNUP",
+): Promise<boolean> {
+  const { data } = await publicClient.post<ApiResponse<{ verified: boolean }>>(
+    "/api/auth/email/verify",
+    { email, code, purpose },
   );
   return data.success && data.data?.verified === true;
+}
+
+/** 비밀번호 재설정 — POST /api/auth/password/reset (이메일 인증코드로 검증) */
+export async function resetPassword(
+  payload: ResetPasswordPayload,
+): Promise<ApiResponse<null>> {
+  const { data } = await publicClient.post<ApiResponse<null>>(
+    "/api/auth/password/reset",
+    payload,
+  );
+  return data;
 }
 
 /** 회원가입 신청 — POST /api/auth/signup */
@@ -46,11 +73,9 @@ export async function login(payload: LoginPayload): Promise<ApiResponse<LoginRes
   return unwrapApiResponse<LoginResult>(publicClient.post("/api/auth/login", payload));
 }
 
-/* ------------------------------ 토큰 ------------------------------ */
+export { saveRefreshToken, getRefreshToken } from "./tokenStorage";
 
-export { saveTokens, saveAccessToken, getAccessToken, getRefreshToken } from "./tokenStorage";
-
-/** 로그아웃 (토큰 삭제 — 별도 API 없음) */
+/** 로그아웃 (refreshToken 삭제 — accessToken은 authStore.clearUser()가 처리) */
 export function logout(): void {
-  clearTokens();
+  clearRefreshToken();
 }

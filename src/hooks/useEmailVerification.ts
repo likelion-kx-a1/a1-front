@@ -1,14 +1,19 @@
 import { useMutation } from "@tanstack/react-query";
 import { requestEmailCode, verifyEmailCode } from "@/lib/auth";
+import type { EmailVerificationPurpose } from "@/types/auth.types";
 
-/** 이메일 인증번호 발송 */
 export function useRequestEmailCode() {
   return useMutation({
-    mutationFn: (email: string) => requestEmailCode(email),
+    mutationFn: ({
+      email,
+      purpose = "SIGNUP",
+    }: {
+      email: string;
+      purpose?: EmailVerificationPurpose;
+    }) => requestEmailCode(email, purpose),
   });
 }
 
-/** 이메일 인증번호 확인 */
 export function useVerifyEmailCode() {
   return useMutation({
     mutationFn: ({ email, code }: { email: string; code: string }) => verifyEmailCode(email, code),

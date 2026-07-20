@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { twMerge } from "tailwind-merge";
 
 interface ModalProps {
   open: boolean;
@@ -47,7 +48,7 @@ export default function Modal({
     >
       {/* 내부 클릭은 전파 차단 */}
       <div
-        className={`w-full rounded-2xl border border-gray-700 bg-gray-800 ${className}`}
+        className={twMerge("w-full rounded-2xl border border-gray-700 bg-gray-800", className)}
         onClick={(e) => e.stopPropagation()}
       >
         {children}

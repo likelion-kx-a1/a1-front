@@ -41,3 +41,13 @@ export interface RefreshResult {
   tokenType: string;
   expiresIn: number;
 }
+
+/** 이메일 인증 목적 */
+export type EmailVerificationPurpose = "SIGNUP" | "PASSWORD_RESET";
+
+/** 비밀번호 재설정 요청 payload */
+export interface ResetPasswordPayload {
+  email: string;
+  verificationCode: string;
+  newPassword: string;
+}

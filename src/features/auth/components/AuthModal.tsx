@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import LoginForm from "./LoginForm";
+import ResetPasswordForm from "./ResetPasswordForm";
 import SignupForm from "./SignupForm";
 import SignupPendingStatus from "./SignupPendingStatus";
 
@@ -11,12 +12,13 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
-type AuthMode = "login" | "signup" | "pending";
+type AuthMode = "login" | "signup" | "pending" | "resetPassword";
 
 const MODAL_LABEL: Record<AuthMode, string> = {
   login: "로그인",
   signup: "회원가입",
   pending: "가입 승인 대기",
+  resetPassword: "비밀번호 재설정",
 };
 
 export default function AuthModal({ open, onClose }: AuthModalProps) {
@@ -41,33 +43,26 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
       onClose={handleClose}
       label={MODAL_LABEL[mode]}
       className={
-        mode === "pending"
-          ? "modal-scroll max-h-[90vh] max-w-lg overflow-y-auto"
-          : "modal-scroll max-h-[90vh] max-w-4xl overflow-y-auto"
+        mode === "signup"
+          ? "modal-scroll max-h-[90vh] max-w-[1200px] overflow-y-auto"
+          : "modal-scroll max-h-[90vh] max-w-[1200px] overflow-hidden"
       }
     >
       {mode === "pending" ? (
         <SignupPendingStatus appliedAt={appliedAt} />
+      ) : mode === "login" ? (
+        <LoginForm
+          onSwitchToSignup={() => setMode("signup")}
+          onSwitchToResetPassword={() => setMode("resetPassword")}
+          onSuccess={handleClose}
+        />
+      ) : mode === "resetPassword" ? (
+        <ResetPasswordForm onSwitchToLogin={() => setMode("login")} onClose={handleClose} />
       ) : (
-        <div className="grid gap-23 p-6 md:grid-cols-2">
-          {/* 왼쪽 비주얼 패널 (모바일에선 숨김) */}
-          <div className="bg-primary-500 hidden min-h-[440px] rounded-2xl md:block" />
-
-          {/* 오른쪽 폼 (로그인 / 회원가입 전환) */}
-          <div className="flex flex-col justify-center py-10 md:pr-15">
-            {mode === "login" ? (
-              <LoginForm
-                onSwitchToSignup={() => setMode("signup")}
-                onSuccess={handleClose}
-              />
-            ) : (
-              <SignupForm
-                onSwitchToLogin={() => setMode("login")}
-                onSubmitted={handleSignupSubmitted}
-              />
-            )}
-          </div>
-        </div>
+        <SignupForm
+          onSwitchToLogin={() => setMode("login")}
+          onSubmitted={handleSignupSubmitted}
+        />
       )}
     </Modal>
   );

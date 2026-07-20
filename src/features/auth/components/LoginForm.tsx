@@ -1,14 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import Button from "@/components/ui/Button";
 import { useLogin } from "@/hooks/useLogin";
-import { saveTokens } from "@/lib/auth";
+import { saveRefreshToken } from "@/lib/auth";
 import { useAuthStore } from "@/stores/authStore";
 
-const socialProviders = ["카카오", "구글", "네이버"];
-
-// 로그인 실패 코드별 안내 메시지 (명세 기준)
+// 로그인 실패 코드별 안내 메시지
 const LOGIN_ERROR_MESSAGES: Record<string, string> = {
   LOGIN_ID_NOT_FOUND: "아이디가 일치하지 않습니다.",
   PASSWORD_NOT_MATCH: "비밀번호가 일치하지 않습니다.",
@@ -20,16 +18,27 @@ const LOGIN_ERROR_MESSAGES: Record<string, string> = {
 interface LoginFormProps {
   /** 회원가입 화면으로 전환 */
   onSwitchToSignup: () => void;
-  /** 로그인 성공 시 호출 (모달 닫기 등) */
+  /** 비밀번호 재설정 화면으로 전환 */
+  onSwitchToResetPassword: () => void;
+  /** 로그인 성공 시 호출*/
   onSuccess: () => void;
 }
 
-export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProps) {
+export default function LoginForm({
+  onSwitchToSignup,
+  onSwitchToResetPassword,
+  onSuccess,
+}: LoginFormProps) {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  const headingId = useId();
+  const userIdInputId = useId();
+  const passwordInputId = useId();
+
   const setUser = useAuthStore((s) => s.setUser);
+  const setAccessToken = useAuthStore((s) => s.setAccessToken);
   const { mutate: loginMutate, isPending: submitting } = useLogin();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -40,11 +49,12 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
       {
         onSuccess: (res) => {
           if (res.success) {
-            saveTokens(res.data.accessToken, res.data.refreshToken);
+            saveRefreshToken(res.data.refreshToken);
+            setAccessToken(res.data.accessToken); // 메모리에만 저장
             setUser(res.data.user); // 전역 로그인 상태 저장
             onSuccess();
           } else {
-            setError(LOGIN_ERROR_MESSAGES[res.code] ?? res.message);
+            setError(LOGIN_ERROR_MESSAGES[res.error.code] ?? res.error.message);
           }
         },
         onError: () => setError("로그인에 실패했습니다. 다시 시도해 주세요."),
@@ -56,80 +66,101 @@ export default function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProp
   const isValid = userId.trim() !== "" && password.trim() !== "";
 
   return (
-    <>
-      {/* 로고 자리표시자 */}
-      <span className="size-10 rounded-md bg-gray-300" aria-hidden />
-
-      <h2 className="mt-2 text-2xl font-bold text-white">어서오세요</h2>
-      <p className="mt-2 text-sm text-gray-400">계정을 액세스 하고 원하는 결과물을 창작하세요</p>
-
-      <form className="mt-4 flex flex-col gap-2" onSubmit={handleSubmit}>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-gray-200">
-          아이디
-          <input
-            type="text"
-            value={userId}
-            onChange={(e) => {
-              setUserId(e.target.value);
-              setError("");
-            }}
-            className="focus:border-primary-500 rounded-lg border border-gray-600 bg-gray-900 px-3 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-gray-200">
-          비밀번호
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setError("");
-            }}
-            className="focus:border-primary-500 rounded-lg border border-gray-600 bg-gray-900 px-3 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none"
-          />
-        </label>
-
-        {/* 로그인 실패 에러 메시지 */}
-        {error && <p className="mt-1 text-sm whitespace-pre-line text-red-500">{error}</p>}
-
-        <Button type="submit" disabled={!isValid || submitting} className="mt-2 w-full">
-          {submitting ? "로그인 중…" : "로그인"}
-        </Button>
-      </form>
-
-      {/* 구분선 */}
-      <div className="my-3 flex items-center gap-3 text-xs text-gray-500">
-        <span className="h-px flex-1 bg-gray-700" />
-        소셜 계정으로 로그인
-        <span className="h-px flex-1 bg-gray-700" />
+    <section
+      aria-labelledby={headingId}
+      className="grid overflow-hidden rounded-2xl md:grid-cols-2"
+    >
+      {/* 왼쪽 비주얼 패널 (모바일에선 숨김) */}
+      <div aria-hidden className="bg-card relative hidden min-h-[480px] overflow-hidden md:block">
+        <div className="absolute top-[41.667%] left-[-33.333%] h-[57.971%] w-[166.667%]">
+          <div className="absolute inset-[-50%_-24%]">
+            <img src="/images/auth/gradient-purple.svg" alt="" className="block size-full max-w-none" />
+          </div>
+        </div>
+        <div className="absolute top-[-7.269%] left-[17%] h-[24.155%] w-[66.667%] rotate-180">
+          <div className="absolute inset-[-120%_-60%]">
+            <img src="/images/auth/gradient-yellow.svg" alt="" className="block size-full max-w-none" />
+          </div>
+        </div>
       </div>
 
-      {/* 소셜 로그인 버튼 */}
-      <div className="flex justify-center gap-3">
-        {socialProviders.map((name) => (
-          <button
-            key={name}
-            type="button"
-            aria-label={`${name} 계정으로 로그인`}
-            className="flex size-14 items-center justify-center rounded-xl border border-gray-700 bg-gray-900 hover:bg-gray-700"
-          >
-            <span className="size-7 rounded-full bg-gray-300" aria-hidden />
+      {/* 오른쪽 폼 */}
+      <div className="bg-surface flex flex-col justify-center gap-10 px-[100px] py-[158px]">
+        <div className="flex flex-col gap-4">
+          <span className="size-15 bg-[#6b6b6b]" aria-hidden />
+
+          <h2 id={headingId} className="text-[32px] font-semibold text-white">
+            올인원 콘텐츠 생성의 시작
+          </h2>
+          <p className="text-base text-[#999]">계정을 액세스 하고 원하는 결과물을 창작하세요</p>
+        </div>
+
+        <form className="flex flex-col gap-10" onSubmit={handleSubmit} noValidate>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <label htmlFor={userIdInputId} className="text-xl text-white">
+                아이디
+              </label>
+              <input
+                id={userIdInputId}
+                name="loginId"
+                type="text"
+                autoComplete="username"
+                value={userId}
+                onChange={(e) => {
+                  setUserId(e.target.value);
+                  setError("");
+                }}
+                className="focus:border-primary-500 h-12 rounded-lg border-2 border-[#707070] px-4 text-base text-white placeholder:text-[#999] focus:outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label htmlFor={passwordInputId} className="text-xl text-white">
+                비밀번호
+              </label>
+              <input
+                id={passwordInputId}
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="비밀번호를 입력해주세요"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError("");
+                }}
+                className="focus:border-primary-500 h-12 rounded-lg border-2 border-[#707070] px-4 text-base text-white placeholder:text-[#999] focus:outline-none"
+              />
+            </div>
+
+            {/* 로그인 실패 에러 메시지 */}
+            {error && (
+              <p role="alert" aria-live="polite" className="text-sm whitespace-pre-line text-red-500">
+                {error}
+              </p>
+            )}
+          </div>
+
+          <Button type="submit" disabled={!isValid || submitting} className="h-12 w-full text-xl">
+            {submitting ? "로그인 중…" : "로그인"}
+          </Button>
+        </form>
+
+        {/* 회원가입 / 계정 찾기 */}
+        <div className="flex items-center justify-center gap-10 text-base text-[#999]">
+          <button type="button" onClick={onSwitchToSignup} className="underline hover:text-white">
+            회원가입
           </button>
-        ))}
+          <button
+            type="button"
+            onClick={onSwitchToResetPassword}
+            className="underline hover:text-white"
+          >
+            아이디/비밀번호를 잊었어요
+          </button>
+        </div>
       </div>
-
-      {/* 회원가입 전환 */}
-      <p className="mt-6 text-center text-sm text-gray-400">
-        계정이 없으신가요?{" "}
-        <button
-          type="button"
-          onClick={onSwitchToSignup}
-          className="text-primary-300 font-medium hover:underline"
-        >
-          회원가입
-        </button>
-      </p>
-    </>
+    </section>
   );
 }

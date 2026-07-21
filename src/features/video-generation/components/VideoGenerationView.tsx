@@ -15,7 +15,6 @@ import Button from "@/components/ui/Button";
 import GeneratingSpinner from "@/components/ui/GeneratingSpinner";
 import Modal from "@/components/ui/Modal";
 import OptionDropdown from "@/components/ui/OptionDropdown";
-import GenerationWorkspaceLayout from "@/components/layout/GenerationWorkspaceLayout";
 import AuthModal from "@/features/auth/components/AuthModal";
 import SaveProjectPickerModal from "@/features/library/components/SaveProjectPickerModal";
 import { useVideoGeneration } from "@/hooks/useVideoGeneration";
@@ -262,7 +261,6 @@ export default function VideoGenerationView({ projectId }: VideoGenerationViewPr
   };
 
   return (
-    <GenerationWorkspaceLayout projectId={projectId}>
     <div className="flex h-full min-h-0 flex-col items-center justify-end gap-6 py-10">
       {/* 결과 / 빈 캔버스 */}
       {submittedPrompt ? (
@@ -602,6 +600,5 @@ export default function VideoGenerationView({ projectId }: VideoGenerationViewPr
         pending={actionPending}
       />
     </div>
-    </GenerationWorkspaceLayout>
   );
 }

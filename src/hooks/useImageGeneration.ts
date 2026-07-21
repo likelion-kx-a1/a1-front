@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import { chatDetailQueryKey } from "@/hooks/useChatDetail";
 import { ensureChatForGeneration, getChatDetail, getGeneratedAssets, sendChatMessage } from "@/lib/chats";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -11,6 +10,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 interface GenerateImageParams {
   prompt: string;
+  /** 참고 이미지 — multipart files로 함께 전송 */
   referenceImages?: File[];
 }
 
@@ -22,7 +22,7 @@ interface GenerateImageResult {
 
 /**
  * 이미지 생성 훅.
- * 채팅 메시지 API(POST /api/chats/{chatId}/messages, assetType=IMAGE)로 요청
+ * 채팅 메시지 API(POST /api/chats/{chatId}/messages, assetType=IMAGE)로 요청하고
  * 채팅 상세 조회로 생성 완료를 폴링.
  */
 export function useImageGeneration(projectId?: number | null) {
@@ -65,9 +65,6 @@ export function useImageGeneration(projectId?: number | null) {
         throw new Error(messageRes.error.message);
       }
 
-      void queryClient.invalidateQueries({ queryKey: ["chats"] });
-      void queryClient.invalidateQueries({ queryKey: chatDetailQueryKey(chatId) });
-
       let sawGenerating = false;
 
       for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
@@ -105,12 +102,6 @@ export function useImageGeneration(projectId?: number | null) {
       }
 
       throw new Error("이미지 생성 대기 시간이 초과되었습니다.");
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ["chats"] });
-      if (chatIdRef.current !== null) {
-        void queryClient.invalidateQueries({ queryKey: chatDetailQueryKey(chatIdRef.current) });
-      }
     },
   });
 }

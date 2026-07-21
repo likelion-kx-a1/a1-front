@@ -35,7 +35,7 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const [ratio, setRatio] = useState("1:1");
-  const [resolution, setResolution] = useState("480p");
+  const [resolution, setResolution] = useState("720p");
 
   const [referenceImages, setReferenceImages] = useState<File[]>([]);
   const [prompt, setPrompt] = useState("");
@@ -343,6 +343,7 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
               options={RATIO_OPTIONS}
               value={ratio}
               onChange={setRatio}
+              label="비율"
               variant="card"
               size="md"
               direction="up"
@@ -351,9 +352,13 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
               options={RESOLUTION_OPTIONS}
               value={resolution}
               onChange={setResolution}
+              label="해상도"
               variant="card"
               size="md"
               listIcon={false}
+              labelWidth="w-12"
+              descriptionWidth="w-10"
+              itemClassName="h-auto p-4"
               direction="up"
             />
           </div>

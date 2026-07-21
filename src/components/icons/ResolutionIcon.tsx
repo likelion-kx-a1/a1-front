@@ -1,8 +1,11 @@
 import type { SVGProps } from "react";
 
+/**
+ * 해상도(품질) 설정 아이콘.
+ */
 export default function ResolutionIcon(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <svg viewBox="-4.5 -4.5 27 27" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
       <path
         d="M11 14H2M16 4H7"
         stroke="currentColor"

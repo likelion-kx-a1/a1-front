@@ -28,6 +28,14 @@ interface OptionDropdownProps {
   listIcon?: boolean;
   /** 트리거 버튼에 표시할 고정 라벨 (없으면 value 표시) */
   triggerLabel?: string;
+  /** 무엇을 고르는 드롭다운인지 (화면에는 안 보이고 스크린리더에만 전달) */
+  label?: string;
+  /** card variant 목록에서 라벨 칸 너비 (열 맞춤용) */
+  labelWidth?: string;
+  /** card variant 목록에서 설명 칸 너비 (열 맞춤용) */
+  descriptionWidth?: string;
+  /** 목록 항목의 여백·높이 조정 (기본값을 덮어쓴다) */
+  itemClassName?: string;
   className?: string;
 }
 
@@ -144,7 +152,7 @@ const ITEM_LABEL = {
   ghost: "",
 };
 
-/** 목록 항목의 설명 — card는 라벨 옆에 고정 폭으로 붙고, 나머지는 오른쪽 끝으로 민다 */
+/** 목록 항목의 설명 — card는 라벨 옆에 고정 폭으로 붙고, 나머지는 오른쪽 끝 */
 const ITEM_DESC = {
   gray: "ml-auto pl-4 text-sm text-gray-400",
   glass: "ml-auto pl-4 text-sm text-gray-400",
@@ -179,8 +187,14 @@ export default function OptionDropdown({
   chevron = true,
   listIcon = true,
   triggerLabel,
+  label,
+  labelWidth,
+  descriptionWidth,
+  itemClassName,
   className = "",
 }: OptionDropdownProps) {
+  // 스크린리더용 이름 — 보이는 고정 라벨이 있으면 그거 사용
+  const accessibleName = label ?? triggerLabel;
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const normalized = normalize(options);
@@ -208,7 +222,7 @@ export default function OptionDropdown({
         onClick={() => setOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={triggerLabel ? `${triggerLabel}: ${value}` : undefined}
+        aria-label={accessibleName ? `${accessibleName}: ${value}` : undefined}
         className={twMerge(
           "relative flex w-full items-center justify-between overflow-hidden rounded-lg",
           TRIGGER_SIZE[size],
@@ -219,7 +233,9 @@ export default function OptionDropdown({
         <span className={twMerge("relative flex items-center", TRIGGER_INNER[size])}>
           {!triggerLabel &&
             (selected?.icon ?? <span className={twMerge("shrink-0", ICON_SIZE[size])} aria-hidden />)}
-          <span className={TRIGGER_LABEL[variant]}>{triggerLabel ?? value}</span>
+          <span className={twMerge(TRIGGER_LABEL[variant], labelWidth)}>
+            {triggerLabel ?? value}
+          </span>
         </span>
         {chevron && (
           <CaretIcon
@@ -245,6 +261,7 @@ export default function OptionDropdown({
           {variant === "glass" && <GlassGlow size="lg" />}
           <ul
             role="listbox"
+            aria-label={accessibleName}
             className={twMerge("modal-scroll relative max-h-64 overflow-y-auto", LIST_INNER[variant])}
           >
             {normalized.map((option) => (
@@ -268,6 +285,7 @@ export default function OptionDropdown({
                             "hover:bg-gray-900",
                             option.label === value ? "text-primary-300" : "text-gray-200",
                           ),
+                    itemClassName,
                   )}
                 >
                   <span className="flex items-center gap-2">
@@ -275,10 +293,12 @@ export default function OptionDropdown({
                       (option.icon ?? (
                         <span className={twMerge("shrink-0", ICON_SIZE[size])} aria-hidden />
                       ))}
-                    <span className={ITEM_LABEL[variant]}>{option.label}</span>
+                    <span className={twMerge(ITEM_LABEL[variant], labelWidth)}>{option.label}</span>
                   </span>
                   {option.description && (
-                    <span className={ITEM_DESC[variant]}>{option.description}</span>
+                    <span className={twMerge(ITEM_DESC[variant], descriptionWidth)}>
+                      {option.description}
+                    </span>
                   )}
                 </button>
               </li>

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
+import { chatDetailQueryKey } from "@/hooks/useChatDetail";
 import { ensureChatForGeneration, getChatDetail, getGeneratedAssets, sendChatMessage } from "@/lib/chats";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -64,6 +65,9 @@ export function useVideoGeneration(projectId?: number | null) {
         throw new Error(messageRes.error.message);
       }
 
+      void queryClient.invalidateQueries({ queryKey: ["chats"] });
+      void queryClient.invalidateQueries({ queryKey: chatDetailQueryKey(chatId) });
+
       let sawGenerating = false;
 
       for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
@@ -101,6 +105,12 @@ export function useVideoGeneration(projectId?: number | null) {
       }
 
       throw new Error("비디오 생성 대기 시간이 초과되었습니다.");
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["chats"] });
+      if (chatIdRef.current !== null) {
+        void queryClient.invalidateQueries({ queryKey: chatDetailQueryKey(chatIdRef.current) });
+      }
     },
   });
 }

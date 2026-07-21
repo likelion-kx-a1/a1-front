@@ -2,7 +2,6 @@
 
 /** 이미지 생성 화면 — 독립 라우트(/image)와 프로젝트 라우트(/project/[projectId]/image)에서 재사용 */
 
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import CloseIcon from "@/components/icons/CloseIcon";
 import CopyIcon from "@/components/icons/CopyIcon";
@@ -13,12 +12,8 @@ import AuthModal from "@/features/auth/components/AuthModal";
 import OptionDropdown from "@/components/ui/OptionDropdown";
 import { useImageGeneration } from "@/hooks/useImageGeneration";
 import { useSaveToLibrary } from "@/hooks/useMedia";
-import {
-  GENERATION_TYPE_OPTIONS,
-  GENERATION_TYPE_ROUTES,
-  RATIO_OPTIONS,
-  RESOLUTION_OPTIONS,
-} from "@/lib/generationTypes";
+import GenerationTypeDropdown from "@/features/generation/components/GenerationTypeDropdown";
+import { RATIO_OPTIONS, RESOLUTION_OPTIONS } from "@/lib/generationTypes";
 import { buildSaveDisplayName } from "@/lib/media";
 import {
   buildMediaFilename,
@@ -36,11 +31,9 @@ interface ImageGenerationViewProps {
 }
 
 export default function ImageGenerationView({ projectId }: ImageGenerationViewProps) {
-  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  const [type, setType] = useState("이미지 생성");
   const [ratio, setRatio] = useState("1:1");
   const [resolution, setResolution] = useState("480p");
 
@@ -67,24 +60,6 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
       referencePreviews.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [referencePreviews]);
-
-  // 생성 타입 전환 → 해당 페이지로 이동. 프로젝트 안에서는 이미지/비디오를 프로젝트 라우트로 유지
-  const handleTypeChange = (next: string) => {
-    setType(next);
-    if (projectId) {
-      if (next === "이미지 생성") {
-        return;
-      }
-      if (next === "비디오 생성") {
-        router.push(`/project/${projectId}/video`);
-        return;
-      }
-    }
-    const href = GENERATION_TYPE_ROUTES[next];
-    if (href) {
-      router.push(href);
-    }
-  };
 
   // 로그인 상태에서만 실행
   const requireAuth = (action: () => void) => {
@@ -306,15 +281,7 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
       {/* 설정 패널 */}
       <div className="flex w-full max-w-[1200px] shrink-0 flex-col items-start gap-4 p-6">
         {/* 생성 타입 전환 */}
-        <OptionDropdown
-          options={GENERATION_TYPE_OPTIONS}
-          value={type}
-          onChange={handleTypeChange}
-          variant="primary"
-          size="lg"
-          direction="up"
-          className="w-[220px]"
-        />
+        <GenerationTypeDropdown current="이미지 생성" projectId={projectId} />
 
         {/* 프롬프트 입력 */}
         <div className="flex w-full flex-col gap-6 rounded-2xl bg-[#333] p-6">

@@ -2,7 +2,6 @@
 
 /** 비디오 생성 화면 — 독립 라우트(/video)와 프로젝트 라우트(/project/[projectId]/video)에서 재사용 */
 
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import CloseIcon from "@/components/icons/CloseIcon";
 import CopyIcon from "@/components/icons/CopyIcon";
@@ -20,12 +19,8 @@ import AuthModal from "@/features/auth/components/AuthModal";
 import SaveProjectPickerModal from "@/features/library/components/SaveProjectPickerModal";
 import { useVideoGeneration } from "@/hooks/useVideoGeneration";
 import { useSaveToLibrary } from "@/hooks/useMedia";
-import {
-  GENERATION_TYPE_OPTIONS,
-  GENERATION_TYPE_ROUTES,
-  RATIO_OPTIONS,
-  RESOLUTION_OPTIONS,
-} from "@/lib/generationTypes";
+import GenerationTypeDropdown from "@/features/generation/components/GenerationTypeDropdown";
+import { RATIO_OPTIONS, RESOLUTION_OPTIONS } from "@/lib/generationTypes";
 import { buildSaveDisplayName } from "@/lib/media";
 import {
   buildMediaFilename,
@@ -43,11 +38,9 @@ interface VideoGenerationViewProps {
 const MAX_FRAMES = 9;
 
 export default function VideoGenerationView({ projectId }: VideoGenerationViewProps) {
-  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  const [type, setType] = useState("비디오 생성");
   const [ratio, setRatio] = useState("1:1");
   const [resolution, setResolution] = useState("480p");
   const [duration, setDuration] = useState("");
@@ -97,23 +90,6 @@ export default function VideoGenerationView({ projectId }: VideoGenerationViewPr
       submittedFramePreviews.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [submittedFramePreviews]);
-
-  const handleTypeChange = (next: string) => {
-    setType(next);
-    if (projectId) {
-      if (next === "비디오 생성") {
-        return;
-      }
-      if (next === "이미지 생성") {
-        router.push(`/project/${projectId}/image`);
-        return;
-      }
-    }
-    const href = GENERATION_TYPE_ROUTES[next];
-    if (href) {
-      router.push(href);
-    }
-  };
 
   const requireAuth = (action: () => void) => {
     if (!user) {
@@ -383,15 +359,7 @@ export default function VideoGenerationView({ projectId }: VideoGenerationViewPr
 
       {/* 설정 패널 */}
       <section aria-label="비디오 생성 설정" className="flex w-full max-w-[1200px] shrink-0 flex-col items-start gap-4 p-6">
-        <OptionDropdown
-          options={GENERATION_TYPE_OPTIONS}
-          value={type}
-          onChange={handleTypeChange}
-          variant="primary"
-          size="lg"
-          direction="up"
-          className="w-[220px]"
-        />
+        <GenerationTypeDropdown current="비디오 생성" projectId={projectId} />
 
         <div className="flex w-full flex-col gap-6 rounded-2xl bg-[#333] p-6">
           <fieldset className="flex w-full items-center gap-4 border-0 p-0">

@@ -5,6 +5,7 @@ import ReversePromptIcon from "@/components/icons/ReversePromptIcon";
 import VideoIcon from "@/components/icons/VideoIcon";
 import IconBadge from "@/components/layout/IconBadge";
 import LibraryNav from "@/components/layout/LibraryNav";
+import Logo from "@/components/layout/Logo";
 
 /** 생성 메뉴 */
 const createMenus = [
@@ -18,11 +19,7 @@ const menuStyle = "flex items-center gap-2 rounded-lg px-4 py-3 text-xl hover:bg
 export default function Sidebar() {
   return (
     <aside className="bg-background border-border flex w-90 shrink-0 flex-col gap-10 border-r-2 p-6 text-gray-200">
-      {/* 서비스명 */}
-      <div className="flex items-center gap-4">
-        <span className="size-10 bg-[#6b6b6b]" aria-hidden />
-        <span className="text-2xl font-medium text-white">서비스명</span>
-      </div>
+      <Logo className="p-2" />
 
       <nav aria-label="주요 메뉴" className="flex flex-1 flex-col gap-4">
         <ul>

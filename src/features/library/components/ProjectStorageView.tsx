@@ -1,28 +1,51 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ComponentType, type SVGProps } from "react";
+import ClockArrowIcon from "@/components/icons/ClockArrowIcon";
+import ImageIcon from "@/components/icons/ImageIcon";
+import ImagePlayIcon from "@/components/icons/ImagePlayIcon";
+import VideoIcon from "@/components/icons/VideoIcon";
 import CardSection from "@/features/library/components/CardSection";
-import OptionDropdown from "@/components/ui/OptionDropdown";
+import OptionDropdown, { type DropdownOption } from "@/components/ui/OptionDropdown";
 import { useMyMedia } from "@/hooks/useMedia";
 import type { SavedMediaType } from "@/types/media.types";
 
 type MediaTypeFilter = "ALL" | SavedMediaType;
+type SortOrder = "latest" | "oldest";
 
-const MEDIA_TYPE_OPTIONS = ["전체", "이미지", "비디오"];
-const TIME_OPTIONS = ["최신순", "오래된순"];
+// 표시 문구(label)와 로직이 쓰는 값(value)을 분리해, 문구를 바꿔도 동작이 안 깨지게 한다
+/**
+ * 시안은 24px 자리 안에 16px 글리프 + 2px 선.
+ */
+function FilterIcon({ icon: Icon }: { icon: ComponentType<SVGProps<SVGSVGElement>> }) {
+  return (
+    <span className="flex size-6 shrink-0 items-center justify-center" aria-hidden>
+      <Icon className="size-4" strokeWidth={2.5} />
+    </span>
+  );
+}
+
+const MEDIA_TYPE_OPTIONS: DropdownOption[] = [
+  { value: "ALL", label: "전체", icon: <FilterIcon icon={ImagePlayIcon} /> },
+  { value: "IMAGE", label: "이미지", icon: <FilterIcon icon={ImageIcon} /> },
+  { value: "VIDEO", label: "비디오", icon: <FilterIcon icon={VideoIcon} /> },
+];
+
+const TIME_OPTIONS: DropdownOption[] = [
+  {
+    value: "latest",
+    label: "최신 순",
+    icon: <ClockArrowIcon direction="down" className="size-6 shrink-0" />,
+  },
+  {
+    value: "oldest",
+    label: "오래된 순",
+    icon: <ClockArrowIcon direction="up" className="size-6 shrink-0" />,
+  },
+];
 
 interface ProjectStorageViewProps {
   projectId: number;
-}
-
-function mapMediaFilter(label: string): MediaTypeFilter {
-  if (label === "이미지") {
-    return "IMAGE";
-  }
-  if (label === "비디오") {
-    return "VIDEO";
-  }
-  return "ALL";
 }
 
 function formatCreatedAt(iso: string): string {
@@ -31,10 +54,9 @@ function formatCreatedAt(iso: string): string {
 
 /** 프로젝트 보관함 — 저장된 생성물 그리드 */
 export default function ProjectStorageView({ projectId }: ProjectStorageViewProps) {
-  const [mediaTypeLabel, setMediaTypeLabel] = useState("전체");
-  const [timeLabel, setTimeLabel] = useState("최신순");
+  const [mediaFilter, setMediaFilter] = useState<MediaTypeFilter>("ALL");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("latest");
 
-  const mediaFilter = mapMediaFilter(mediaTypeLabel);
   const mediaQuery = useMyMedia({
     projectId,
     mediaType: mediaFilter === "ALL" ? undefined : mediaFilter,
@@ -44,7 +66,7 @@ export default function ProjectStorageView({ projectId }: ProjectStorageViewProp
     const items = mediaQuery.data?.success ? (mediaQuery.data.data ?? []) : [];
     const sorted = [...items].sort((a, b) => {
       const diff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      return timeLabel === "최신순" ? -diff : diff;
+      return sortOrder === "latest" ? -diff : diff;
     });
 
     return sorted.map((item) => ({
@@ -59,7 +81,7 @@ export default function ProjectStorageView({ projectId }: ProjectStorageViewProp
       previewUrl: item.previewUrl,
       caption: formatCreatedAt(item.createdAt),
     }));
-  }, [mediaQuery.data, timeLabel]);
+  }, [mediaQuery.data, sortOrder]);
 
   return (
     <section aria-labelledby="project-storage-heading" className="flex flex-col gap-6">
@@ -69,24 +91,23 @@ export default function ProjectStorageView({ projectId }: ProjectStorageViewProp
 
       <div className="flex flex-wrap gap-4" role="group" aria-label="보관함 필터">
         <OptionDropdown
-          triggerLabel="미디어 종류"
+          label="미디어 종류"
           options={MEDIA_TYPE_OPTIONS}
-          value={mediaTypeLabel}
-          onChange={setMediaTypeLabel}
-          variant="ghost"
+          value={mediaFilter}
+          onChange={(next) => setMediaFilter(next as MediaTypeFilter)}
+          variant="sort"
+          size="xl"
+          labelWidth="w-12"
           direction="down"
-          listIcon={false}
-          className="w-36 bg-[#333]"
         />
         <OptionDropdown
-          triggerLabel="시간"
+          label="정렬 순서"
           options={TIME_OPTIONS}
-          value={timeLabel}
-          onChange={setTimeLabel}
-          variant="ghost"
+          value={sortOrder}
+          onChange={(next) => setSortOrder(next as SortOrder)}
+          variant="sort"
+          size="xl"
           direction="down"
-          listIcon={false}
-          className="w-36 bg-[#333]"
         />
       </div>
 

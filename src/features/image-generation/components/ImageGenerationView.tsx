@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import CloseIcon from "@/components/icons/CloseIcon";
 import CopyIcon from "@/components/icons/CopyIcon";
 import DownloadIcon from "@/components/icons/DownloadIcon";
-import GenerateIcon from "@/components/icons/GenerateIcon";
+import GenerateButton from "@/features/generation/components/GenerateButton";
 import GeneratingSpinner from "@/components/ui/GeneratingSpinner";
 import AuthModal from "@/features/auth/components/AuthModal";
 import OptionDropdown from "@/components/ui/OptionDropdown";
@@ -338,37 +338,30 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
 
         {/* 옵션 + 생성 버튼 */}
         <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-4 rounded-lg bg-[#333] px-4 py-2">
+          <div className="flex items-center gap-4 rounded-lg">
             <OptionDropdown
               options={RATIO_OPTIONS}
               value={ratio}
               onChange={setRatio}
-              variant="ghost"
-              chevron={false}
+              variant="card"
+              size="md"
               direction="up"
-              className="w-24"
             />
             <OptionDropdown
               options={RESOLUTION_OPTIONS}
               value={resolution}
               onChange={setResolution}
-              variant="ghost"
-              chevron={false}
+              variant="card"
+              size="md"
               listIcon={false}
               direction="up"
-              className="w-24"
             />
           </div>
 
-          <button
-            type="button"
-            aria-label="이미지 생성"
+          <GenerateButton
             onClick={handleGenerate}
             disabled={!prompt.trim() || generation.isPending}
-            className="bg-primary-500 flex h-12 w-[120px] items-center justify-center rounded-lg disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <GenerateIcon className="size-8 text-white" aria-hidden />
-          </button>
+          />
         </div>
       </div>
 

@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import CloseIcon from "@/components/icons/CloseIcon";
 import CopyIcon from "@/components/icons/CopyIcon";
 import DownloadIcon from "@/components/icons/DownloadIcon";
-import GenerateIcon from "@/components/icons/GenerateIcon";
+import GenerateButton from "@/features/generation/components/GenerateButton";
 import ImagePlusIcon from "@/components/icons/ImagePlusIcon";
 import PlusIcon from "@/components/icons/PlusIcon";
 import TimerIcon from "@/components/icons/TimerIcon";
@@ -443,25 +443,23 @@ export default function VideoGenerationView({ projectId }: VideoGenerationViewPr
         </div>
 
         <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-4 rounded-lg bg-[#333] px-4 py-2" role="group" aria-label="생성 옵션">
+          <div className="flex items-center gap-4 rounded-lg" role="group" aria-label="생성 옵션">
             <OptionDropdown
               options={RATIO_OPTIONS}
               value={ratio}
               onChange={setRatio}
-              variant="ghost"
-              chevron={false}
+              variant="card"
+              size="md"
               direction="up"
-              className="w-24"
             />
             <OptionDropdown
               options={RESOLUTION_OPTIONS}
               value={resolution}
               onChange={setResolution}
-              variant="ghost"
-              chevron={false}
+              variant="card"
+              size="md"
               listIcon={false}
               direction="up"
-              className="w-24"
             />
 
             <span aria-hidden className="h-6 w-px bg-gray-600" />
@@ -480,15 +478,10 @@ export default function VideoGenerationView({ projectId }: VideoGenerationViewPr
             </label>
           </div>
 
-          <button
-            type="button"
-            aria-label="비디오 생성"
+          <GenerateButton
             onClick={handleGenerate}
             disabled={!prompt.trim() || generation.isPending}
-            className="bg-primary-500 flex h-12 w-[120px] items-center justify-center rounded-lg disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <GenerateIcon className="size-8 text-white" aria-hidden />
-          </button>
+          />
         </div>
       </section>
 

@@ -8,7 +8,7 @@ import CaretIcon from "@/components/icons/CaretIcon";
 export interface DropdownOption {
   label: string;
   icon?: ReactNode;
-  /** 목록에서 라벨 옆 설명 텍스트 (예: "1:1" 옆의 "정사각형") */
+  /** 목록에서 라벨 옆 설명 텍스트 (예: "1:1" 옆의 "정방형") */
   description?: string;
 }
 
@@ -18,10 +18,10 @@ interface OptionDropdownProps {
   onChange: (value: string) => void;
   /** 목록이 트리거 위/아래 중 어디로 펼쳐질지 (하단 생성 바에서는 "up") */
   direction?: "up" | "down";
-  /** 트리거 버튼 색상: 회색 / 어두운 카드+보라 글로우 / 배경 없는 투명 */
-  variant?: "gray" | "glass" | "ghost";
-  /** 트리거 버튼 크기 (기본 sm / 강조용 lg) */
-  size?: "sm" | "lg";
+  /** 트리거 버튼 색상: 회색 / 어두운 카드+보라 글로우 / 어두운 카드 / 배경 없는 투명 */
+  variant?: "gray" | "glass" | "card" | "ghost";
+  /** 트리거 버튼 크기 (기본 sm / 생성 바 md / 강조용 lg) */
+  size?: "sm" | "md" | "lg";
   /** 트리거에 펼침 화살표를 보일지 (기본 true) */
   chevron?: boolean;
   /** 펼친 목록에서도 아이콘을 보일지 (기본 true) */
@@ -35,7 +35,24 @@ const TRIGGER_VARIANT = {
   gray: "bg-gray-800 text-gray-200 hover:bg-gray-700",
   glass:
     "border border-[#5f6a85]/60 bg-gradient-to-b from-[rgba(28,31,42,0.8)] to-[rgba(17,17,25,0.8)] to-64% text-white",
+  card: "justify-center bg-[#1c1f2a] text-white hover:bg-[#252939]",
   ghost: "text-white hover:bg-white/10",
+};
+
+/** 트리거 화살표 색 — card는 본문 흰색보다 연한 회청색 */
+const CHEVRON_VARIANT = {
+  gray: "",
+  glass: "",
+  card: "text-[#bfc7d6]",
+  ghost: "",
+};
+
+/** 트리거 라벨 — card는 값이 바뀌어도 화살표가 밀리지 않게 폭 고정 */
+const TRIGGER_LABEL = {
+  gray: "",
+  glass: "",
+  card: "w-10 text-center",
+  ghost: "",
 };
 
 
@@ -86,16 +103,19 @@ function GlassGlow({ size }: { size: "sm" | "lg" }) {
 
 const TRIGGER_SIZE = {
   sm: "px-3 py-2 text-sm",
+  md: "h-12 px-4 py-3 text-base",
   lg: "px-4 py-3 text-xl font-medium",
 };
 
 const TRIGGER_INNER = {
   sm: "gap-2",
+  md: "gap-2",
   lg: "gap-2 p-2",
 };
 
 const ICON_SIZE = {
   sm: "size-6 bg-gray-400",
+  md: "size-6 bg-gray-400",
   lg: "size-8 bg-[#6b6b6b]",
 };
 
@@ -104,6 +124,7 @@ const LIST_VARIANT = {
   gray: "border border-gray-700 bg-gray-800 py-1",
   glass:
     "border border-[#5f6a85]/60 bg-gradient-to-b from-[rgba(28,31,42,0.8)] to-[rgba(17,17,25,0.8)] to-64% px-4 py-3",
+  card: "border border-[#394257] bg-[#1c1f2a] p-2",
   ghost: "border border-gray-700 bg-gray-800 py-1",
 };
 
@@ -111,16 +132,35 @@ const LIST_VARIANT = {
 const LIST_INNER = {
   gray: "",
   glass: "flex flex-col gap-2",
+  card: "flex flex-col gap-2",
   ghost: "",
+};
+
+/** 목록 항목의 라벨 — card는 트리거와 같은 고정 폭 */
+const ITEM_LABEL = {
+  gray: "",
+  glass: "",
+  card: "w-10 text-center",
+  ghost: "",
+};
+
+/** 목록 항목의 설명 — card는 라벨 옆에 고정 폭으로 붙고, 나머지는 오른쪽 끝으로 민다 */
+const ITEM_DESC = {
+  gray: "ml-auto pl-4 text-sm text-gray-400",
+  glass: "ml-auto pl-4 text-sm text-gray-400",
+  card: "w-[60px] text-left text-base text-[#bfc7d6]",
+  ghost: "ml-auto pl-4 text-sm text-gray-400",
 };
 
 const CHEVRON_SIZE = {
   sm: "size-4",
+  md: "size-6",
   lg: "size-6",
 };
 
 const ITEM_SIZE = {
   sm: "gap-2 px-3 py-2 text-sm",
+  md: "h-12 gap-2 rounded-lg px-4 py-3 text-base",
   lg: "gap-2 rounded-lg p-2 text-xl font-medium",
 };
 
@@ -179,14 +219,15 @@ export default function OptionDropdown({
         <span className={twMerge("relative flex items-center", TRIGGER_INNER[size])}>
           {!triggerLabel &&
             (selected?.icon ?? <span className={twMerge("shrink-0", ICON_SIZE[size])} aria-hidden />)}
-          {triggerLabel ?? value}
+          <span className={TRIGGER_LABEL[variant]}>{triggerLabel ?? value}</span>
         </span>
         {chevron && (
           <CaretIcon
             aria-hidden
             className={twMerge(
-              "shrink-0 transition-transform",
+              "relative shrink-0 transition-transform",
               CHEVRON_SIZE[size],
+              CHEVRON_VARIANT[variant],
               chevronPointsDown && "rotate-180",
             )}
           />
@@ -207,7 +248,7 @@ export default function OptionDropdown({
             className={twMerge("modal-scroll relative max-h-64 overflow-y-auto", LIST_INNER[variant])}
           >
             {normalized.map((option) => (
-              <li key={option.label}>
+              <li key={option.label} role="presentation">
                 <button
                   type="button"
                   role="option"
@@ -221,10 +262,12 @@ export default function OptionDropdown({
                     ITEM_SIZE[size],
                     variant === "glass"
                       ? "text-white hover:bg-white/10"
-                      : twMerge(
-                          "hover:bg-gray-900",
-                          option.label === value ? "text-primary-300" : "text-gray-200",
-                        ),
+                      : variant === "card"
+                        ? "justify-center text-white hover:bg-white/10"
+                        : twMerge(
+                            "hover:bg-gray-900",
+                            option.label === value ? "text-primary-300" : "text-gray-200",
+                          ),
                   )}
                 >
                   <span className="flex items-center gap-2">
@@ -232,10 +275,10 @@ export default function OptionDropdown({
                       (option.icon ?? (
                         <span className={twMerge("shrink-0", ICON_SIZE[size])} aria-hidden />
                       ))}
-                    {option.label}
+                    <span className={ITEM_LABEL[variant]}>{option.label}</span>
                   </span>
                   {option.description && (
-                    <span className="ml-auto pl-4 text-sm text-gray-400">{option.description}</span>
+                    <span className={ITEM_DESC[variant]}>{option.description}</span>
                   )}
                 </button>
               </li>

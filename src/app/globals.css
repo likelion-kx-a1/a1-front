@@ -1,4 +1,5 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css");
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap");
 @import "tailwindcss";
 
 /* Theme */
@@ -7,6 +8,7 @@
   /* Font */
   --font-pretendard: "Pretendard Variable", -apple-system, "Segoe UI", Roboto,
     sans-serif;
+  --font-montserrat: "Montserrat", sans-serif; /* 로고 워드마크 전용 */
 
   /* 다크 테마 시맨틱 컬러 (디자인 시안 기준) */
   --background: #111119; /* 앱 배경 */
@@ -21,6 +23,7 @@
   /* Font */
   --font-sans: var(--font-pretendard);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-logo: var(--font-montserrat);
 
   /* Surface / Text (시맨틱) */
   --color-background: var(--background);

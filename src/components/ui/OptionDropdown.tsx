@@ -18,8 +18,8 @@ interface OptionDropdownProps {
   onChange: (value: string) => void;
   /** 목록이 트리거 위/아래 중 어디로 펼쳐질지 (하단 생성 바에서는 "up") */
   direction?: "up" | "down";
-  /** 트리거 버튼 색상: 회색 / 강조용 보라 / 배경 없는 투명 */
-  variant?: "gray" | "primary" | "ghost";
+  /** 트리거 버튼 색상: 회색 / 어두운 카드+보라 글로우 / 배경 없는 투명 */
+  variant?: "gray" | "glass" | "ghost";
   /** 트리거 버튼 크기 (기본 sm / 강조용 lg) */
   size?: "sm" | "lg";
   /** 트리거에 펼침 화살표를 보일지 (기본 true) */
@@ -33,13 +33,60 @@ interface OptionDropdownProps {
 
 const TRIGGER_VARIANT = {
   gray: "bg-gray-800 text-gray-200 hover:bg-gray-700",
-  primary: "bg-primary-500 text-white hover:bg-primary-600",
+  glass:
+    "border border-[#5f6a85]/60 bg-gradient-to-b from-[rgba(28,31,42,0.8)] to-[rgba(17,17,25,0.8)] to-64% text-white",
   ghost: "text-white hover:bg-white/10",
 };
 
+
+const GLASS_GLOW_SHAPES = {
+  /** 트리거용*/
+  sm: {
+    viewBox: "0 0 320 120",
+    box: "bottom-[-50px] h-[120px]",
+    domes: [
+      "M160 40C93.73 40 40 57.91 40 80H280C280 57.91 226.28 40 160 40Z",
+      "M160 46.7C93.73 46.7 40 61.61 40 80H280C280 61.61 226.28 46.7 160 46.7Z",
+      "M160 57.34C93.73 57.34 40 67.49 40 80H280C280 67.49 226.28 57.34 160 57.34Z",
+    ],
+  },
+  /** 펼친 목록용*/
+  lg: {
+    viewBox: "0 0 320 160",
+    box: "bottom-[-59px] h-[160px]",
+    domes: [
+      "M160 40C93.73 40 40 75.82 40 120H280C280 75.82 226.28 40 160 40Z",
+      "M160 53.4C93.73 53.4 40 83.22 40 120H280C280 83.22 226.28 53.4 160 53.4Z",
+      "M160 74.68C93.73 74.68 40 94.97 40 120H280C280 94.97 226.28 74.68 160 74.68Z",
+    ],
+  },
+};
+
+const GLASS_GLOW_FILLS = [
+  "var(--color-primary-900)",
+  "var(--color-primary-600)",
+  "var(--color-primary-400)",
+];
+
+function GlassGlow({ size }: { size: "sm" | "lg" }) {
+  const { viewBox, box, domes } = GLASS_GLOW_SHAPES[size];
+  return (
+    <svg
+      aria-hidden
+      viewBox={viewBox}
+      preserveAspectRatio="none"
+      className={twMerge("pointer-events-none absolute left-[-23%] w-[146%] blur-[20px]", box)}
+    >
+      {domes.map((d, i) => (
+        <path key={d} d={d} fill={GLASS_GLOW_FILLS[i]} className={i === 0 ? "blur-[20px]" : ""} />
+      ))}
+    </svg>
+  );
+}
+
 const TRIGGER_SIZE = {
   sm: "px-3 py-2 text-sm",
-  lg: "px-4 py-2 text-xl font-medium",
+  lg: "px-4 py-3 text-xl font-medium",
 };
 
 const TRIGGER_INNER = {
@@ -52,15 +99,24 @@ const ICON_SIZE = {
   lg: "size-8 bg-[#6b6b6b]",
 };
 
+/** 펼친 목록 바깥 상자 — 배경·테두리·여백 */
+const LIST_VARIANT = {
+  gray: "border border-gray-700 bg-gray-800 py-1",
+  glass:
+    "border border-[#5f6a85]/60 bg-gradient-to-b from-[rgba(28,31,42,0.8)] to-[rgba(17,17,25,0.8)] to-64% px-4 py-3",
+  ghost: "border border-gray-700 bg-gray-800 py-1",
+};
+
+/** 펼친 목록 안쪽 ul — 항목 배치 */
+const LIST_INNER = {
+  gray: "",
+  glass: "flex flex-col gap-2",
+  ghost: "",
+};
+
 const CHEVRON_SIZE = {
   sm: "size-4",
   lg: "size-6",
-};
-
-const LIST_VARIANT = {
-  gray: "border border-gray-700 bg-gray-800 py-1",
-  primary: "flex flex-col gap-2 bg-primary-500 px-4 py-2",
-  ghost: "border border-gray-700 bg-gray-800 py-1",
 };
 
 const ITEM_SIZE = {
@@ -114,12 +170,13 @@ export default function OptionDropdown({
         aria-expanded={open}
         aria-label={triggerLabel ? `${triggerLabel}: ${value}` : undefined}
         className={twMerge(
-          "flex w-full items-center justify-between rounded-lg",
+          "relative flex w-full items-center justify-between overflow-hidden rounded-lg",
           TRIGGER_SIZE[size],
           TRIGGER_VARIANT[variant],
         )}
       >
-        <span className={twMerge("flex items-center", TRIGGER_INNER[size])}>
+        {variant === "glass" && <GlassGlow size="sm" />}
+        <span className={twMerge("relative flex items-center", TRIGGER_INNER[size])}>
           {!triggerLabel &&
             (selected?.icon ?? <span className={twMerge("shrink-0", ICON_SIZE[size])} aria-hidden />)}
           {triggerLabel ?? value}
@@ -137,49 +194,54 @@ export default function OptionDropdown({
       </button>
 
       {open && (
-        <ul
-          role="listbox"
+        <div
           className={twMerge(
-            "modal-scroll absolute left-0 z-10 max-h-64 w-max min-w-full overflow-y-auto rounded-lg shadow-lg",
+            "absolute left-0 z-10 w-max min-w-full overflow-hidden rounded-lg shadow-lg",
             direction === "up" ? "bottom-full mb-2" : "top-full mt-2",
             LIST_VARIANT[variant],
           )}
         >
-          {normalized.map((option) => (
-            <li key={option.label}>
-              <button
-                type="button"
-                role="option"
-                aria-selected={option.label === value}
-                onClick={() => {
-                  onChange(option.label);
-                  setOpen(false);
-                }}
-                className={twMerge(
-                  "flex w-full items-center whitespace-nowrap text-left",
-                  ITEM_SIZE[size],
-                  variant === "primary"
-                    ? "text-white hover:bg-white/10"
-                    : twMerge(
-                        "hover:bg-gray-900",
-                        option.label === value ? "text-primary-300" : "text-gray-200",
-                      ),
-                )}
-              >
-                <span className="flex items-center gap-2">
-                  {listIcon &&
-                    (option.icon ?? (
-                      <span className={twMerge("shrink-0", ICON_SIZE[size])} aria-hidden />
-                    ))}
-                  {option.label}
-                </span>
-                {option.description && (
-                  <span className="ml-auto pl-4 text-sm text-gray-400">{option.description}</span>
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
+          {variant === "glass" && <GlassGlow size="lg" />}
+          <ul
+            role="listbox"
+            className={twMerge("modal-scroll relative max-h-64 overflow-y-auto", LIST_INNER[variant])}
+          >
+            {normalized.map((option) => (
+              <li key={option.label}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={option.label === value}
+                  onClick={() => {
+                    onChange(option.label);
+                    setOpen(false);
+                  }}
+                  className={twMerge(
+                    "flex w-full items-center whitespace-nowrap text-left",
+                    ITEM_SIZE[size],
+                    variant === "glass"
+                      ? "text-white hover:bg-white/10"
+                      : twMerge(
+                          "hover:bg-gray-900",
+                          option.label === value ? "text-primary-300" : "text-gray-200",
+                        ),
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    {listIcon &&
+                      (option.icon ?? (
+                        <span className={twMerge("shrink-0", ICON_SIZE[size])} aria-hidden />
+                      ))}
+                    {option.label}
+                  </span>
+                  {option.description && (
+                    <span className="ml-auto pl-4 text-sm text-gray-400">{option.description}</span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );

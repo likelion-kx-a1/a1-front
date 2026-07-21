@@ -7,9 +7,10 @@ import CloseIcon from "@/components/icons/CloseIcon";
 import CopyIcon from "@/components/icons/CopyIcon";
 import DownloadIcon from "@/components/icons/DownloadIcon";
 import GenerateButton from "@/features/generation/components/GenerateButton";
+import PromptRefineToggle from "@/features/generation/components/PromptRefineToggle";
 import ImagePlusIcon from "@/components/icons/ImagePlusIcon";
 import PlusIcon from "@/components/icons/PlusIcon";
-import TimerIcon from "@/components/icons/TimerIcon";
+import DurationInput from "@/features/generation/components/DurationInput";
 import Button from "@/components/ui/Button";
 import GeneratingSpinner from "@/components/ui/GeneratingSpinner";
 import Modal from "@/components/ui/Modal";
@@ -44,6 +45,7 @@ export default function VideoGenerationView({ projectId }: VideoGenerationViewPr
   const [ratio, setRatio] = useState("1:1");
   const [resolution, setResolution] = useState("720p");
   const [duration, setDuration] = useState("");
+  const [refinePrompt, setRefinePrompt] = useState(false);
   const [prompt, setPrompt] = useState("");
 
   const [frameModalOpen, setFrameModalOpen] = useState(false);
@@ -484,26 +486,16 @@ export default function VideoGenerationView({ projectId }: VideoGenerationViewPr
                 direction="up"
               />
 
-              <span aria-hidden className="h-6 w-px bg-gray-600" />
-
-              <label className="flex h-12 items-center gap-2 rounded-lg px-4 py-3">
-                <TimerIcon className="size-6 text-white" aria-hidden />
-                <span className="sr-only">영상 길이(초)</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value.replace(/\D/g, ""))}
-                  placeholder="초 입력..."
-                  className="h-9 w-20 rounded-lg bg-[#2b2b2b] p-2 text-center text-base text-white placeholder:text-[#999] focus:outline-none"
-                />
-              </label>
+              <DurationInput value={duration} onChange={setDuration} />
             </div>
 
-            <GenerateButton
-              onClick={handleGenerate}
-              disabled={!prompt.trim() || generation.isPending}
-            />
+            <div className="flex items-center gap-4">
+              <PromptRefineToggle checked={refinePrompt} onChange={setRefinePrompt} />
+              <GenerateButton
+                onClick={handleGenerate}
+                disabled={!prompt.trim() || generation.isPending}
+              />
+            </div>
           </div>
         </section>
 

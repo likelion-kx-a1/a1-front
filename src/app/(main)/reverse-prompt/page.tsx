@@ -2,13 +2,11 @@
 
 /** 역프롬프트 페이지 */
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import GenerationWorkspaceLayout from "@/components/layout/GenerationWorkspaceLayout";
-import OptionDropdown from "@/components/ui/OptionDropdown";
 import AuthModal from "@/features/auth/components/AuthModal";
+import GenerationTypeDropdown from "@/features/generation/components/GenerationTypeDropdown";
 import { useGenerationHistory } from "@/hooks/useGenerationHistory";
-import { GENERATION_TYPE_OPTIONS, GENERATION_TYPE_ROUTES } from "@/lib/generationTypes";
 import { appendReversePromptHistory, getHistoryScopeKey } from "@/lib/generationHistoryStorage";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -22,19 +20,9 @@ function readFileAsDataUrl(file: File): Promise<string> {
 }
 
 export default function ReversePromptPage() {
-  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [type, setType] = useState("역프롬프트");
   const { refreshReversePromptHistory } = useGenerationHistory(null);
-
-  const handleTypeChange = (next: string) => {
-    setType(next);
-    const href = GENERATION_TYPE_ROUTES[next];
-    if (href) {
-      router.push(href);
-    }
-  };
 
   const handleUploadClick = (e: React.MouseEvent) => {
     if (!user) {
@@ -70,15 +58,7 @@ export default function ReversePromptPage() {
         <div aria-hidden className="min-h-[300px] w-full flex-1" />
 
         <div className="flex h-[430px] w-full max-w-[1200px] shrink-0 flex-col items-start gap-4 p-6">
-          <OptionDropdown
-            options={GENERATION_TYPE_OPTIONS}
-            value={type}
-            onChange={handleTypeChange}
-            variant="primary"
-            size="lg"
-            direction="up"
-            className="w-[220px]"
-          />
+          <GenerationTypeDropdown current="역프롬프트" />
 
           <div className="flex w-full flex-1 flex-col items-start rounded-2xl bg-[#333] p-6">
             <div className="flex w-full flex-1 flex-col items-start rounded-lg border-2 border-dashed border-[#444] bg-[#222] p-4">

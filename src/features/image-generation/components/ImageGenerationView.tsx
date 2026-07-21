@@ -7,6 +7,7 @@ import CloseIcon from "@/components/icons/CloseIcon";
 import CopyIcon from "@/components/icons/CopyIcon";
 import DownloadIcon from "@/components/icons/DownloadIcon";
 import GenerateButton from "@/features/generation/components/GenerateButton";
+import PromptRefineToggle from "@/features/generation/components/PromptRefineToggle";
 import GeneratingSpinner from "@/components/ui/GeneratingSpinner";
 import AuthModal from "@/features/auth/components/AuthModal";
 import OptionDropdown from "@/components/ui/OptionDropdown";
@@ -36,6 +37,7 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
 
   const [ratio, setRatio] = useState("1:1");
   const [resolution, setResolution] = useState("720p");
+  const [refinePrompt, setRefinePrompt] = useState(false);
 
   const [referenceImages, setReferenceImages] = useState<File[]>([]);
   const [prompt, setPrompt] = useState("");
@@ -363,10 +365,13 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
             />
           </div>
 
-          <GenerateButton
-            onClick={handleGenerate}
-            disabled={!prompt.trim() || generation.isPending}
-          />
+          <div className="flex items-center gap-4">
+            <PromptRefineToggle checked={refinePrompt} onChange={setRefinePrompt} />
+            <GenerateButton
+              onClick={handleGenerate}
+              disabled={!prompt.trim() || generation.isPending}
+            />
+          </div>
         </div>
       </div>
 

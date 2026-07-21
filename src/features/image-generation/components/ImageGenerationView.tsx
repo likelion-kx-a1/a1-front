@@ -1,6 +1,6 @@
 "use client";
 
-/** 이미지 생성 화면 — 독립 라우트(/image)와 프로젝트 라우트(/project/[projectId]/image) 양쪽에서 재사용 */
+/** 이미지 생성 화면 — 독립 라우트(/image)와 프로젝트 라우트(/project/[projectId]/image)에서 재사용 */
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -26,6 +26,7 @@ import {
   copyTextToClipboard,
   downloadFromUrl,
 } from "@/lib/mediaActions";
+import GenerationWorkspaceLayout from "@/components/layout/GenerationWorkspaceLayout";
 import SaveProjectPickerModal from "@/features/library/components/SaveProjectPickerModal";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -54,7 +55,7 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
   const generation = useImageGeneration(projectId);
   const saveToLibrary = useSaveToLibrary(projectId);
 
-  // 선택한 참고 이미지들의 미리보기 URL
+  // 선택한 이미지들의 미리보기 URL
   const referencePreviews = useMemo(
     () => referenceImages.map((file) => URL.createObjectURL(file)),
     [referenceImages],
@@ -212,6 +213,7 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
   };
 
   return (
+    <GenerationWorkspaceLayout projectId={projectId}>
     <div className="flex h-full min-h-0 flex-col items-center justify-end gap-6 py-10">
       {/* 캔버스 / 생성 결과 */}
       {submittedPrompt ? (
@@ -411,5 +413,6 @@ export default function ImageGenerationView({ projectId }: ImageGenerationViewPr
         pending={actionPending}
       />
     </div>
+    </GenerationWorkspaceLayout>
   );
 }

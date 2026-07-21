@@ -1,5 +1,4 @@
-import ImageIcon from "@/components/icons/ImageIcon";
-import VideoIcon from "@/components/icons/VideoIcon";
+import MediaKindIcon from "@/components/ui/MediaKindIcon";
 import Link from "next/link";
 
 interface MediaCardProps {
@@ -21,7 +20,6 @@ export default function MediaCard({
   metaLine,
   href,
 }: MediaCardProps) {
-  const TypeIcon = mediaType === "VIDEO" ? VideoIcon : ImageIcon;
   const typeLabel = mediaTypeLabel ?? (mediaType === "VIDEO" ? "비디오" : "이미지");
 
   const content = (
@@ -41,7 +39,7 @@ export default function MediaCard({
           )
         ) : null}
         <span className="absolute top-3 right-3 flex size-8 items-center justify-center rounded-lg bg-black/50">
-          <TypeIcon className="size-4 text-white" aria-hidden />
+          <MediaKindIcon kind={mediaType} className="size-4 text-white" aria-hidden />
         </span>
       </div>
       <div className="flex flex-col gap-1">

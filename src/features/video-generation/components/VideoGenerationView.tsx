@@ -10,7 +10,10 @@ import GenerateButton from "@/features/generation/components/GenerateButton";
 import PromptRefineToggle from "@/features/generation/components/PromptRefineToggle";
 import ImagePlusIcon from "@/components/icons/ImagePlusIcon";
 import PlusIcon from "@/components/icons/PlusIcon";
+import VideoIcon from "@/components/icons/VideoIcon";
 import DurationInput from "@/features/generation/components/DurationInput";
+import FrameCard from "@/features/generation/components/FrameCard";
+import FrameSlot from "@/features/generation/components/FrameSlot";
 import Button from "@/components/ui/Button";
 import GeneratingSpinner from "@/components/ui/GeneratingSpinner";
 import Modal from "@/components/ui/Modal";
@@ -52,6 +55,7 @@ export default function VideoGenerationView({ projectId }: VideoGenerationViewPr
   const [frames, setFrames] = useState<File[]>([]);
   /** 모달 안에서만 편집 — "완료" 눌러야 frames에 반영 */
   const [draftFrames, setDraftFrames] = useState<File[]>([]);
+  /** 모달에 펼쳐 보이는 슬롯 수 — 3개로 시작해 "+"로 MAX_FRAMES까지 늘린다 */
   const [visibleSlots, setVisibleSlots] = useState(3);
   const fileInputRef = useRef<HTMLInputElement>(null);
   /** 파일 선택창을 연 슬롯 인덱스 — null이면 새로 추가, 값이 있으면 해당 프레임 교체 */
@@ -129,6 +133,10 @@ export default function VideoGenerationView({ projectId }: VideoGenerationViewPr
 
   const handleRemoveFrame = (index: number) => {
     setFrames((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveDraftFrame = (index: number) => {
+    setDraftFrames((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleOpenFrameModal = () =>
@@ -378,27 +386,23 @@ export default function VideoGenerationView({ projectId }: VideoGenerationViewPr
               <legend className="sr-only">프레임 설정</legend>
 
               {framePreviews.length === 0 ? (
-                // 아직 고른 프레임이 없을 때 자리만 잡는 안내 — 실제 목록이 아니라 목록 태그를 쓰지 않는다
-                <div aria-hidden className="flex flex-1 items-center gap-4">
-                  <div className="flex h-[120px] flex-1 flex-col items-center justify-center gap-2 rounded-lg bg-[#555]">
-                    <ImagePlusIcon className="size-6 text-white" />
-                    <p className="text-center text-base leading-[1.5] text-[#bfc7d6]">
-                      시작 프레임
-                    </p>
-                  </div>
-                  <div className="flex h-[120px] flex-1 flex-col items-center justify-center gap-2 rounded-lg bg-[#555]">
-                    <ImagePlusIcon className="size-6 text-white" />
-                    <p className="text-center text-base leading-[1.5] text-[#bfc7d6]">
-                      마지막 프레임
-                    </p>
-                  </div>
-                </div>
+                <>
+                  <FrameCard
+                    filled
+                    label="시작 프레임"
+                    icon={<ImagePlusIcon className="size-6 text-[#bfc7d6]" strokeWidth={2} />}
+                  />
+                  <FrameCard
+                    label="마지막 프레임"
+                    icon={<ImagePlusIcon className="size-6 text-[#bfc7d6]" strokeWidth={2} />}
+                  />
+                </>
               ) : (
-                <ul aria-label="선택한 프레임" className="flex flex-1 items-center gap-4">
+                <ul aria-label="선택한 프레임" className="flex items-center gap-4">
                   {framePreviews.map((src, i) => (
                     <li
                       key={src}
-                      className="group relative h-[120px] flex-1 overflow-hidden rounded-lg bg-[#555]"
+                      className="group relative h-20 w-[120px] shrink-0 overflow-hidden rounded-lg bg-[#262c3b]"
                     >
                       <img
                         src={src}
@@ -424,30 +428,26 @@ export default function VideoGenerationView({ projectId }: VideoGenerationViewPr
                 </ul>
               )}
 
-              <button
-                type="button"
-                aria-label="프레임 추가"
+              <FrameCard
+                label="프레임 추가"
                 onClick={handleOpenFrameModal}
-                className="flex h-[120px] w-[135px] flex-col items-center justify-center gap-2 rounded-lg bg-[#444]"
-              >
-                <PlusIcon className="size-6 text-[#6b6b6b]" aria-hidden />
-                <span className="text-center text-base leading-[1.5] text-[#6b6b6b]">
-                  프레임 추가
-                </span>
-              </button>
+                icon={<PlusIcon className="size-6 text-[#bfc7d6]" aria-hidden />}
+              />
 
-              <button
-                type="button"
+              {/* TODO: 참조 이미지 선택 핸들러 연결 — 지금은 시안 배치만 */}
+              <FrameCard
+                label="참조 이미지"
+                hint
+                icon={<PlusIcon className="size-6 text-[#bfc7d6]" aria-hidden />}
+              />
+
+              <FrameCard
+                label="스토리보드 불러오기"
                 disabled
-                aria-label="스토리보드 불러오기 (준비 중)"
+                onClick={() => {}}
                 title="준비 중인 기능입니다"
-                className="flex h-[120px] w-[280px] cursor-not-allowed flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[#444] p-6 opacity-50"
-              >
-                <PlusIcon className="size-6 text-[#6b6b6b]" aria-hidden />
-                <span className="text-center text-base leading-[1.5] text-[#6b6b6b]">
-                  스토리보드 불러오기
-                </span>
-              </button>
+                icon={<VideoIcon className="size-6 text-[#bfc7d6]" strokeWidth={2} aria-hidden />}
+              />
             </fieldset>
 
             <textarea
@@ -503,53 +503,28 @@ export default function VideoGenerationView({ projectId }: VideoGenerationViewPr
           open={frameModalOpen}
           onClose={() => setFrameModalOpen(false)}
           label="프레임 추가"
-          className="max-w-[735px] border-2 border-[#394257] bg-[#1c1f2a]"
+          // 테두리를 border로 주면 폭을 차지해 슬롯이 한 줄에 3개가 안 들어간다 (시안도 outline)
+          className="w-[604px] max-w-full rounded-2xl border-0 bg-[#1c1f2a] outline-2 -outline-offset-2 outline-[#394257]"
         >
-          <div className="flex flex-col gap-6 p-6">
-            <h2 className="text-xl font-semibold text-white">프레임 추가</h2>
+          <div className="flex flex-col gap-4 p-4">
+            {/* 제목은 화면에 안 띄우되 문서 구조상 남겨둔다 (dialog의 aria-label과 같은 문구) */}
+            <h2 className="sr-only">프레임 추가</h2>
 
-            <ul className="flex flex-wrap gap-4">
+
+            <ul className="grid grid-cols-3 gap-4">
               {Array.from({ length: visibleSlots }, (_, i) => (
-                <li key={draftPreviews[i] ?? `empty-${i}`} className="relative shrink-0">
-                  {draftPreviews[i] ? (
-                    <button
-                      type="button"
-                      aria-label="프레임 이미지 변경"
-                      onClick={() => openFilePicker(i)}
-                      className="group relative block h-[120px] w-[213px] overflow-hidden rounded-lg"
-                    >
-                      <img
-                        src={draftPreviews[i]}
-                        alt={`추가한 프레임 ${i + 1}`}
-                        className="size-full object-cover"
-                      />
-                      <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-base text-white opacity-0 transition-opacity group-hover:opacity-100">
-                        변경
-                      </span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      aria-label="프레임 이미지 선택"
-                      onClick={() => openFilePicker(null)}
-                      className="flex h-[120px] w-[213px] flex-col items-center justify-center gap-2 rounded-lg bg-[#555] text-[#bfc7d6]"
-                    >
-                      <ImagePlusIcon className="size-6" aria-hidden />
-                      <span className="text-base">프레임 추가</span>
-                    </button>
-                  )}
-
-                  {i === visibleSlots - 1 && visibleSlots < MAX_FRAMES && (
-                    <button
-                      type="button"
-                      aria-label="프레임 슬롯 추가"
-                      onClick={() => setVisibleSlots((prev) => Math.min(MAX_FRAMES, prev + 1))}
-                      className="absolute top-1/2 -right-5 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#444] text-[#bfc7d6]"
-                    >
-                      <PlusIcon className="size-5" aria-hidden />
-                    </button>
-                  )}
-                </li>
+                <FrameSlot
+                  key={draftPreviews[i] ?? `empty-${i}`}
+                  position={i + 1}
+                  previewUrl={draftPreviews[i]}
+                  onSelect={() => openFilePicker(draftPreviews[i] ? i : null)}
+                  onRemove={() => handleRemoveDraftFrame(i)}
+                  onAddSlot={
+                    i === visibleSlots - 1 && visibleSlots < MAX_FRAMES
+                      ? () => setVisibleSlots((prev) => Math.min(MAX_FRAMES, prev + 1))
+                      : undefined
+                  }
+                />
               ))}
             </ul>
 

@@ -1,28 +1,18 @@
 export type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type AccountStatus = "ACTIVE" | "INACTIVE";
 
-/** GET /api/admin/signup-requests 목록 항목 */
-export interface SignupRequest {
-  userId: number;
-  loginId: string;
-  name: string;
-  email: string;
-  phoneNumber: string;
-  approvalStatus: ApprovalStatus;
-  accountStatus: AccountStatus;
-  createdAt: string;
-}
-
-/** GET /api/admin/users 목록 항목 */
+/** GET /api/admin/users 목록 항목 (승인 대기 목록은 approvalStatus=PENDING 필터로 조회) */
 export interface AdminUser {
-  userId: number;
+  id: number;
   loginId: string;
   name: string;
   email: string;
   role: string;
   accountStatus: AccountStatus;
   approvalStatus: ApprovalStatus;
+  loginCount: number;
   lastLoginAt: string | null;
+  createdAt: string;
 }
 
 /** 페이지네이션 공통 응답 (data 필드) */
@@ -31,6 +21,7 @@ export interface Page<T> {
   page: number;
   size: number;
   totalElements: number;
+  totalPages: number;
 }
 
 /** GET /api/admin/users 쿼리 파라미터 */

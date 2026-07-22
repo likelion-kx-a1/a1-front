@@ -5,7 +5,7 @@
  */
 
 import type { ApiResponse } from "@/types/api.types";
-import type { AccountStatus, AdminUser, AdminUsersQuery, Page, SignupRequest } from "@/types/admin.types";
+import type { AccountStatus, AdminUser, AdminUsersQuery, Page } from "@/types/admin.types";
 import { authClient } from "./http";
 
 interface StatusResult {
@@ -15,18 +15,6 @@ interface StatusResult {
 }
 
 type ApprovalStatusResult = "APPROVED" | "REJECTED";
-
-/** 신규 회원가입 신청 목록 조회 — GET /api/admin/signup-requests */
-export async function getSignupRequests(
-  page = 0,
-  size = 20,
-): Promise<ApiResponse<Page<SignupRequest>>> {
-  const { data } = await authClient.get<ApiResponse<Page<SignupRequest>>>(
-    "/api/admin/signup-requests",
-    { params: { page, size } },
-  );
-  return data;
-}
 
 /** 회원가입 승인 — PATCH /api/admin/users/{userId}/approve */
 export async function approveSignup(userId: number): Promise<ApiResponse<StatusResult>> {

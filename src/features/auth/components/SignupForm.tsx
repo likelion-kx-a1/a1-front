@@ -3,13 +3,14 @@
 import { useId, useState } from "react";
 import Button from "@/components/ui/Button";
 import { useCheckLoginId, useSignup } from "@/hooks/useSignup";
+import type { SignupResult } from "@/types/auth.types";
 import EmailVerification from "./EmailVerification";
 
 interface SignupFormProps {
   /** 로그인 화면으로 전환 */
   onSwitchToLogin: () => void;
-  /** 가입 신청 완료 시 호출 */
-  onSubmitted: (appliedAt: string) => void;
+  /** 가입 신청 완료 시 호출 (서버 응답 데이터와 신청 시각 전달) */
+  onSubmitted: (result: SignupResult, appliedAt: string) => void;
 }
 
 const inputStyle =
@@ -93,7 +94,7 @@ export default function SignupForm({ onSwitchToLogin, onSubmitted }: SignupFormP
       {
         onSuccess: (res) => {
           if (res.success) {
-            onSubmitted(new Date().toISOString());
+            onSubmitted(res.data, new Date().toISOString());
           } else {
             setSubmitError(res.error.message);
           }

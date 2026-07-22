@@ -1,10 +1,19 @@
 import { useId } from "react";
 import Link from "next/link";
+import type { ApprovalStatus } from "@/types/admin.types";
 
 interface SignupPendingStatusProps {
+  /** 회원가입 응답의 승인 상태 */
+  approvalStatus: ApprovalStatus;
   /** 가입 신청 일시 */
   appliedAt: string;
 }
+
+const APPROVAL_STATUS_LABEL: Record<ApprovalStatus, string> = {
+  PENDING: "권한 승인 대기 중",
+  APPROVED: "승인 완료",
+  REJECTED: "승인 거절됨",
+};
 
 function formatAppliedAt(iso: string) {
   const d = new Date(iso);
@@ -15,7 +24,10 @@ function formatAppliedAt(iso: string) {
   };
 }
 
-export default function SignupPendingStatus({ appliedAt }: SignupPendingStatusProps) {
+export default function SignupPendingStatus({
+  approvalStatus,
+  appliedAt,
+}: SignupPendingStatusProps) {
   const headingId = useId();
   const { date, time } = formatAppliedAt(appliedAt);
 
@@ -57,7 +69,7 @@ export default function SignupPendingStatus({ appliedAt }: SignupPendingStatusPr
           <div className="flex w-full flex-col gap-10">
             <div className="flex flex-col gap-4">
               <p className="text-base text-[#999]">권한 승인 여부</p>
-              <p className="text-xl text-white">권한 승인 대기 중</p>
+              <p className="text-xl text-white">{APPROVAL_STATUS_LABEL[approvalStatus]}</p>
             </div>
 
             <div className="flex flex-col gap-4">

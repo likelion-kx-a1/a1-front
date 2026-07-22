@@ -1,18 +1,20 @@
+import type { AccountStatus, ApprovalStatus } from "./admin.types";
+
 /** 회원가입 요청 payload */
 export interface SignupPayload {
   loginId: string;
   email: string;
   password: string;
   name: string;
-  birthDate: string; 
+  birthDate: string;
   phoneNumber: string;
 }
 
 /** 회원가입 응답 data */
 export interface SignupResult {
   userId: number;
-  approvalStatus: string; 
-  accountStatus: string; 
+  approvalStatus: ApprovalStatus;
+  accountStatus: AccountStatus;
 }
 
 /** 로그인 요청 payload */

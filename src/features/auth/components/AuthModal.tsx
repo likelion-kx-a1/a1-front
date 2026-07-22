@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Modal from "@/components/ui/Modal";
+import type { SignupResult } from "@/types/auth.types";
 import LoginForm from "./LoginForm";
 import ResetPasswordForm from "./ResetPasswordForm";
 import SignupForm from "./SignupForm";
@@ -25,6 +26,7 @@ const MODAL_LABEL: Record<AuthMode, string> = {
 
 export default function AuthModal({ open, onClose, onLoginSuccess }: AuthModalProps) {
   const [mode, setMode] = useState<AuthMode>("login");
+  const [signupResult, setSignupResult] = useState<SignupResult | null>(null);
   const [appliedAt, setAppliedAt] = useState("");
 
   // 닫을 때 로그인 모드로 초기화
@@ -34,7 +36,8 @@ export default function AuthModal({ open, onClose, onLoginSuccess }: AuthModalPr
   };
 
   // 회원가입 신청 완료 → 승인 대기 화면으로 전환
-  const handleSignupSubmitted = (submittedAt: string) => {
+  const handleSignupSubmitted = (result: SignupResult, submittedAt: string) => {
+    setSignupResult(result);
     setAppliedAt(submittedAt);
     setMode("pending");
   };
@@ -50,8 +53,8 @@ export default function AuthModal({ open, onClose, onLoginSuccess }: AuthModalPr
           : "modal-scroll max-h-[90vh] max-w-[1200px] overflow-hidden"
       }
     >
-      {mode === "pending" ? (
-        <SignupPendingStatus appliedAt={appliedAt} />
+      {mode === "pending" && signupResult ? (
+        <SignupPendingStatus approvalStatus={signupResult.approvalStatus} appliedAt={appliedAt} />
       ) : mode === "login" ? (
         <LoginForm
           onSwitchToSignup={() => setMode("signup")}

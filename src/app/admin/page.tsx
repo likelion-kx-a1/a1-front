@@ -15,7 +15,7 @@ import {
   useUpdateUserStatus,
 } from "@/hooks/useAdmin";
 import { useAuthStore } from "@/stores/authStore";
-import type { SignupRequest } from "@/types/admin.types";
+import type { AdminUser } from "@/types/admin.types";
 
 const TABS = ["회원 관리", "토큰 통계"] as const;
 type AdminTab = (typeof TABS)[number];
@@ -52,7 +52,7 @@ export default function AdminPage() {
   const [approveErrors, setApproveErrors] = useState<Record<number, string>>({});
   const [statusErrors, setStatusErrors] = useState<Record<number, string>>({});
 
-  const [rejectTarget, setRejectTarget] = useState<SignupRequest | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<AdminUser | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectError, setRejectError] = useState("");
 
@@ -78,7 +78,7 @@ export default function AdminPage() {
     });
   };
 
-  const openRejectModal = (member: SignupRequest) => {
+  const openRejectModal = (member: AdminUser) => {
     setRejectTarget(member);
     setRejectReason("");
     setRejectError("");
@@ -92,7 +92,7 @@ export default function AdminPage() {
     }
     setRejectError("");
     rejectMutation.mutate(
-      { userId: rejectTarget.userId, reason: rejectReason.trim() },
+      { userId: rejectTarget.id, reason: rejectReason.trim() },
       {
         onSuccess: (res) => {
           if (res.success) {
@@ -221,20 +221,19 @@ export default function AdminPage() {
                   )}
                   {/* 승인 대기 회원은 최대 3명까지만 노출 */}
                   {pendingMembers.slice(0, 3).map((m) => (
-                    <tr key={m.userId} className="bg-surface border-border border-t">
+                    <tr key={m.id} className="bg-surface border-border border-t">
                       <td className="px-5 py-4 text-white">{m.name}</td>
                       <td className="text-muted px-5 py-4">{m.email}</td>
-                      <td className="text-muted px-5 py-4 text-center">{m.phoneNumber}</td>
+                      <td className="text-muted px-5 py-4 text-center">-</td>
                       <td className="text-muted px-5 py-4 text-center">{m.createdAt}</td>
                       <td className="px-5 py-4 whitespace-nowrap">
                         <div className="flex flex-col items-center gap-1">
                           <div className="flex justify-center gap-3">
                             <button
                               type="button"
-                              onClick={() => handleApprove(m.userId)}
+                              onClick={() => handleApprove(m.id)}
                               disabled={
-                                approveMutation.isPending &&
-                                approveMutation.variables === m.userId
+                                approveMutation.isPending && approveMutation.variables === m.id
                               }
                               className="text-primary-500 underline disabled:opacity-50"
                             >
@@ -248,9 +247,9 @@ export default function AdminPage() {
                               거부
                             </button>
                           </div>
-                          {approveErrors[m.userId] && (
+                          {approveErrors[m.id] && (
                             <p role="alert" className="text-xs text-red-500">
-                              {approveErrors[m.userId]}
+                              {approveErrors[m.id]}
                             </p>
                           )}
                         </div>
@@ -312,9 +311,9 @@ export default function AdminPage() {
                     </tr>
                   )}
                   {activeMembers.map((m) => {
-                    const isSelf = m.userId === currentUserId;
+                    const isSelf = m.id === currentUserId;
                     return (
-                      <tr key={m.userId} className="bg-surface border-border border-t">
+                      <tr key={m.id} className="bg-surface border-border border-t">
                         <td className="px-5 py-4 text-white">{m.name}</td>
                         <td className="text-muted px-5 py-4">{m.email}</td>
                         <td className="text-muted px-5 py-4 text-center">-</td>
@@ -327,7 +326,7 @@ export default function AdminPage() {
                               <span className="text-primary-500 font-medium">활성</span>
                               <button
                                 type="button"
-                                onClick={() => handleDeactivate(m.userId)}
+                                onClick={() => handleDeactivate(m.id)}
                                 disabled={isSelf}
                                 title={isSelf ? "본인 계정은 비활성화할 수 없습니다." : undefined}
                                 className="text-gray-500 underline disabled:cursor-not-allowed disabled:opacity-40"
@@ -335,9 +334,9 @@ export default function AdminPage() {
                                 활성 해제
                               </button>
                             </div>
-                            {statusErrors[m.userId] && (
+                            {statusErrors[m.id] && (
                               <p role="alert" className="text-xs text-red-500">
-                                {statusErrors[m.userId]}
+                                {statusErrors[m.id]}
                               </p>
                             )}
                           </div>

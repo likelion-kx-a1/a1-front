@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ArrowUpRightIcon from "@/components/icons/ArrowUpRightIcon";
 
 const featureCards: { label: string; href: string }[] = [
   { label: "이미지 생성", href: "/image" },
@@ -12,7 +13,7 @@ export default function Home() {
       {/* 랜딩 히어로 */}
       <section
         aria-label="랜딩 비디오"
-        className="flex h-[640px] items-center justify-center overflow-hidden bg-[#222] p-[10px]"
+        className="flex aspect-[1480/640] items-center justify-center overflow-hidden rounded-[32px] bg-[#222] p-[10px]"
       >
         <p className="text-[40px] text-white/10">랜딩 비디오</p>
       </section>
@@ -31,8 +32,8 @@ export default function Home() {
                   className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60"
                 />
                 <span className="relative flex w-full items-center justify-between">
-                  <span className="text-2xl text-white">{card.label}</span>
-                  <span className="size-8 bg-white" aria-hidden />
+                  <h2 className="text-2xl font-medium text-white">{card.label}</h2>
+                  <ArrowUpRightIcon className="size-8 text-white" aria-hidden />
                 </span>
               </Link>
             </li>
